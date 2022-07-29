@@ -16,8 +16,8 @@ html, body {
 
 body {
   display: block;
-  min-width: 1200px;
-  min-height: 800px;
+  /* min-width: 1200px;
+  min-height: 800px; */
   font-size: 0;
   /* background: #444444; */
   /* background: url(./images/picture.jpg) top center / cover no-repeat; */
@@ -25,6 +25,7 @@ body {
   background-size: cover; */
   /* filter: sepia(80%); */
 }
+
 
 #root {
   display: inline-block;
