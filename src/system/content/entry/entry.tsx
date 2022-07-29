@@ -10,6 +10,12 @@ import ManageFrame from "./manageFrame";
 
 const Entry = () => {
 
+    // ブラウザバックを禁止する
+    // history.pushState(null, null, location.href);
+    window.addEventListener('popstate', (e) => {
+      alert('ブラウザバックを使わないでください。');
+    //   history.go(1);
+    });
     return (
         <HashRouter basename={process.env.PUBLIC_URL}>
             <Router />
