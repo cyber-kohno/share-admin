@@ -12,7 +12,7 @@ const Regulation = () => {
     const { store, setStore } = useContext(GlobalContext);
 
     const [isRule, setRule] = useState(true);
-    const [isDetail, setDetail] = useState(false);
+    const [isDispDialog, setDispDialog] = useState(false);
     const [focusIndex, setFocusIndex] = useState(0);
     const [ruleProps, setRuleProps] = useState<RegulationUtil.RuleProps>({
         id: '',
@@ -36,7 +36,7 @@ const Regulation = () => {
     }
 
     const openDetailDialog = () => {
-        setDetail(true);
+        setDispDialog(true);
     }
 
     const register = () => {
@@ -73,7 +73,8 @@ const Regulation = () => {
             <_Button
                 isEnable={true}
                 onClick={() => {
-                    store.mode = 'entrance';
+                    // store.mode = 'entrance';
+                    store.transition.backFrame();
                     setStore({ ...store });
                 }}
             >戻る</_Button>
@@ -105,11 +106,11 @@ const Regulation = () => {
                 isEnable={isInputOK()}
                 onClick={register}
             >{true ? '登録' : '更新'}</_Button>
-            {!isDetail ? <></> : <FieldDetailDialog
+            {!isDispDialog ? <></> : <FieldDetailDialog
                 index={focusIndex}
                 fieldProps={fieldList[focusIndex]}
                 update={() => { setFieldList(fieldList.slice()) }}
-                close={() => { setDetail(false) }}
+                close={() => { setDispDialog(false) }}
             />}
         </_Wrap>
     );

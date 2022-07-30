@@ -1,23 +1,36 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled, { css } from "styled-components";
 import Styles from "../../design/styles";
 import DatabaseUtil from "../../utils/databaseUtil";
+import RegulationUtil from "../../utils/regulationUtil";
+import { GlobalContext } from "../entry/entry";
+import { ConteProps } from "../seach/searchContents";
+import DataEditDialog from "./dataEditDialog";
 
-type FieldProps = {
+export type FieldProps = {
     no: number
     name: string,
+    inputType: RegulationUtil.FieldInputType;
+    list: string;
 };
 
-const DataViewerRoot = (props: {
+const DataViewer = (props: {
+    conte: ConteProps;
 }) => {
+    const { store, setStore } = useContext(GlobalContext);
 
     const [fieldList, setFieldList] = useState<FieldProps[]>([]);
+    const [isDispDialog, setDispDialog] = useState(false);
 
     useEffect(() => {
-        findFieldList().then((res) => {
+        findFieldList(props.conte.seq).then((res) => {
             setFieldList(res);
         });
     }, []);
+
+    const openDetailDialog = () => {
+        setDispDialog(true);
+    }
 
     const columnList = fieldList.map((field, i) => {
 
@@ -28,10 +41,11 @@ const DataViewerRoot = (props: {
 
     return (
         <_Wrap>
-            <_Button isEnable={true}>戻る</_Button>
-            <_MessageFrame><_Message>
-                aaa
-            </_Message></_MessageFrame>
+            <_Button isEnable={true} onClick={() => {
+                store.transition.backFrame();
+                setStore({ ...store });
+            }}>戻る</_Button>
+            <_MessageFrame><_Message>{props.conte.outline}</_Message></_MessageFrame>
             <_OperationRecord>
                 <_Switch isFocus={false}>テーブル</_Switch>
                 <_Switch isFocus={false}>統計</_Switch>
@@ -40,15 +54,34 @@ const DataViewerRoot = (props: {
             <_TableFrame>
                 <_Record>{columnList}</_Record>
             </_TableFrame>
+            <_OperationRecord>
+                <_Button isEnable={true} onClick={openDetailDialog}>レコード追加</_Button>
+                <_Button isEnable={true}>編集</_Button>
+            </_OperationRecord>
+            {!isDispDialog ? <></> : <DataEditDialog
+                fieldList={fieldList}
+                regist={(forms: string[]) => {
+                    const rowQuery = `(select max(row) from rcmsttbl WHERE conteseq = '${props.conte.seq}')`;
+                    const nextRow = `(case when ${rowQuery} is null then -1 else ${rowQuery} end) + 1`;
+                    const insertRcmstQuery = `INSERT INTO rcmsttbl(conteseq, row, user) VALUES('${props.conte.seq}', ${nextRow}, '${store.user?.seq}')`;
+                    const insertRcvalQuery = `INSERT INTO rcvaltbl(conteseq, row, field_no, data) VALUES ${forms.map((form, i) => (
+                        `('${props.conte.seq}', ${nextRow}, ${i}, '${form}')`
+                    )).join(',')}`;
+                    DatabaseUtil.sendQueryRequestToAPI('update', [insertRcmstQuery, insertRcvalQuery].join(';')).then(() => {
+                        alert('登録成功');
+                    });
+                }}
+                close={() => { setDispDialog(false) }}
+            />}
         </_Wrap>
     );
 }
 
-export default DataViewerRoot;
+export default DataViewer;
 
 
-const findFieldList = async () => {
-    const sql = `SELECT no, name FROM fieldtbl WHERE contents = 9 ORDER BY no`;
+const findFieldList = async (seq: number) => {
+    const sql = `SELECT no, name, input_type as inputType, list FROM fieldtbl WHERE contents = ${seq} ORDER BY no`;
     const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
     const results = await response.json();
     return results as FieldProps[];

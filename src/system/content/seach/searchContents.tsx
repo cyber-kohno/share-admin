@@ -4,20 +4,22 @@ import Styles from "../../design/styles";
 import DatabaseUtil from "../../utils/databaseUtil";
 import RegulationUtil from "../../utils/regulationUtil";
 import { GlobalContext } from "../entry/entry";
+import DataViewer from "../refer/dataViewer";
 
 
-type ConteListProps = {
-    seq: number
-    id: string,
-    name: string,
-    cnt: number
+export type ConteProps = {
+    seq: number;
+    id: string;
+    name: string;
+    outline: string;
+    cnt: number;
 };
 
-const SeachContents = (props: {
+const SearchContents = (props: {
 }) => {
     const { store, setStore } = useContext(GlobalContext);
 
-    const [conteList, setConteList] = useState<ConteListProps[]>([]);
+    const [conteList, setConteList] = useState<ConteProps[]>([]);
     const [focusIndex, setFocusIndex] = useState(0);
 
     useEffect(() => {
@@ -31,7 +33,8 @@ const SeachContents = (props: {
             <_Button
                 isEnable={true}
                 onClick={() => {
-                    store.mode = 'entrance';
+                    // store.mode = 'entrance';
+                    store.transition.backFrame();
                     setStore({ ...store });
                 }}
             >戻る</_Button>
@@ -44,7 +47,8 @@ const SeachContents = (props: {
                     }
 
                     const referData = () => {
-                        store.mode = 'refer';
+                        // store.mode = 'refer';
+                    store.transition.setNextFrame(<DataViewer conte={conteList[focusIndex]}/>);
                         setStore({...store});
                     }
                     const isFocus = focusIndex === i;
@@ -74,15 +78,15 @@ const SeachContents = (props: {
     );
 }
 
-export default SeachContents;
+export default SearchContents;
 
 
 const findContentsList = async () => {
     const subQuery = `(SELECT count(*) from fieldtbl WHERE contents = conte.seq) as cnt`;
-    const sql = `SELECT seq, id, name, ${subQuery} FROM contetbl conte`;
+    const sql = `SELECT seq, id, name, outline, ${subQuery} FROM contetbl conte`;
     const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
     const results = await response.json();
-    return results as ConteListProps[];
+    return results as ConteProps[];
 };
 
 const _Wrap = styled.div`

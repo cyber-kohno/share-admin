@@ -3,8 +3,11 @@ import { useContext } from "react";
 import styled from "styled-components";
 import useMedia from "use-media";
 import SystemUtil from "../../utils/systemUtil";
+import AccountManage from "../account/accountManage";
+import Regulation from "../define/defineManage";
 import { GlobalContext } from "../entry/entry";
 import { MediaQueryContext } from "../entry/manageFrame";
+import SearchContents from "../seach/searchContents";
 import MenuCard from "./menuCard";
 
 const Entrance = () => {
@@ -17,7 +20,8 @@ const Entrance = () => {
                 title={'コンテンツ作成'}
                 detail={<>コンテンツの参照・編集権限の設定を行い、<br />データの定義を行います。</>}
                 callback={() => {
-                    store.mode = 'regulation';
+                    // store.mode = 'regulation';
+                    store.transition.setNextFrame(<Regulation />);
                     setStore({ ...store });
                 }}
             />
@@ -25,7 +29,8 @@ const Entrance = () => {
                 title={'コンテンツ検索'}
                 detail={<>公開されたコンテンツを検索します。</>}
                 callback={() => {
-                    store.mode = 'search';
+                    // store.mode = 'search';
+                    store.transition.setNextFrame(<SearchContents />);
                     setStore({ ...store });
                 }}
             />
@@ -37,7 +42,7 @@ const Entrance = () => {
                     'グループ参加のURLを発行することができます。'
                 ].map((str, i) => <span key={i}>{str}<br /></span>)}</>}
                 callback={() => {
-                    store.mode = 'regulation';
+                    // store.mode = 'regulation';
                     setStore({ ...store });
                 }}
             />
@@ -47,7 +52,8 @@ const Entrance = () => {
                     'ユーザIDを変更することができます。',
                 ].map((str, i) => <span key={i}>{str}<br /></span>)}</>}
                 callback={() => {
-                    store.mode = 'account';
+                    // store.mode = 'account';
+                    store.transition.setNextFrame(<AccountManage />);
                     setStore({ ...store });
                 }}
             />

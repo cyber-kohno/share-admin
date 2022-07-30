@@ -10,12 +10,25 @@ import ManageFrame from "./manageFrame";
 
 const Entry = () => {
 
-    // ブラウザバックを禁止する
-    // history.pushState(null, null, location.href);
-    window.addEventListener('popstate', (e) => {
-      alert('ブラウザバックを使わないでください。');
-    //   history.go(1);
-    });
+    useEffect(() => {
+        if (window === undefined) return;
+
+        const state = window.history.state;
+        if (!state) {
+          window.history.replaceState({ isExit: true }, '');
+          window.history.pushState({ isExit: false }, '');
+        }
+
+        const exit = () => {
+            alert('ブラウザバック');
+        }
+    
+        window.addEventListener('popstate', exit);
+        return () => {
+          window.removeEventListener('popstate', exit);
+        }
+    }, []);
+
     return (
         <HashRouter basename={process.env.PUBLIC_URL}>
             <Router />

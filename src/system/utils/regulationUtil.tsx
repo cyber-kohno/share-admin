@@ -35,14 +35,15 @@ namespace RegulationUtil {
         }
     }
 
-    export type FieldInputType = 'number' | 'text' | 'combobox';
+    export type FieldInputType = 'number' | 'text' | 'combobox' | 'sentence';
     export const FieldInputTypeItems: {
         key: FieldInputType;
         message: string;
     }[] = [
-            { key: 'number', message: '数字' },
-            { key: 'text', message: '文字' },
+            { key: 'number', message: '数値' },
+            { key: 'text', message: '文字列' },
             { key: 'combobox', message: '選択肢' },
+            { key: 'sentence', message: '文章（複数行）' },
         ];
 
     export type ReferAuth = 'no-login' | 'login' | 'user-limit' | 'group-limit' | 'owner-only';
