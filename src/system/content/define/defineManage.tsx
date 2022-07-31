@@ -55,10 +55,10 @@ const Regulation = () => {
             )`);
             fieldList.forEach((field, i) => {
                 list.push(`INSERT INTO fieldtbl(
-                        contents, no, name, outline, cont_unique, input_type
+                        contents, no, name, outline, cont_unique, input_type, list, width
                     ) VALUES(
                         ${contentsSeq + 1}, ${i}, '${field.name}', '${field.outline}',
-                        '${field.isUnique ? '1' : ''}', '${field.inputType}'
+                        '${field.isUnique ? '1' : ''}', '${field.inputType}', '${field.list}', ${field.width}
                     )
                 `);
             });

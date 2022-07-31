@@ -18,24 +18,24 @@ const DataEditDialog = (props: {
         setForms(new Array<string>(props.fieldList.length).fill(''));
     }, []);
 
-    const fieldJsxList = props.fieldList.map((field, i) => {
-
+    const fieldJsxList = forms.map((form, i) => {
+        const field = props.fieldList[i];
         const getFormJsx = () => {
             switch (field.inputType) {
                 case 'text': return (
-                    <_TextForm value={forms[i]} onChange={(e) => {
+                    <_TextForm value={form} onChange={(e) => {
                         forms[i] = e.target.value;
                         setForms(forms.slice());
                     }} />
                 );
                 case 'number': return (
-                    <_NumberForm type={'number'} value={forms[i]} onChange={(e) => {
+                    <_NumberForm type={'number'} value={form} onChange={(e) => {
                         forms[i] = e.target.value;
                         setForms(forms.slice());
                     }} />
                 );
                 case 'combobox': return (
-                    <_Combobox value={forms[i]} onChange={(e) => {
+                    <_Combobox value={form} onChange={(e) => {
                         forms[i] = e.target.value;
                         setForms(forms.slice());
                     }} >{field.list.split(',').map((value, j) => {
@@ -43,7 +43,7 @@ const DataEditDialog = (props: {
                     })}</_Combobox>
                 );
                 case 'sentence': return (
-                    <_TextArea value={forms[i]} onChange={(e) => {
+                    <_TextArea value={form} onChange={(e) => {
                         forms[i] = e.target.value;
                         setForms(forms.slice());
                     }} />

@@ -44,7 +44,21 @@ const FieldDetailDialog = (props: {
                         ))}
                     </_Combobox>
                 </_Record>
-                <_Button isEnable={true} onClick={()=> {
+                <_Record isEnable={props.fieldProps.inputType === 'combobox'}>
+                    <_Title>選択肢</_Title>
+                    <_TextForm type={'text'} value={props.fieldProps.list} onChange={(e) => {
+                        props.fieldProps.list = e.target.value;
+                        props.update();
+                    }} />
+                </_Record>
+                <_Record>
+                    <_Title>テーブル列幅</_Title>
+                    <_TextForm type={'number'} value={props.fieldProps.width} onChange={(e) => {
+                        props.fieldProps.width = Number(e.target.value);
+                        props.update();
+                    }} />
+                </_Record>
+                <_Button isEnable={true} onClick={() => {
                     props.update();
                     props.close();
                 }}>更新</_Button>
@@ -80,8 +94,11 @@ const _Frame = styled.div`
     text-align: left;
 `;
 
-const _Record = styled.div`
+const _Record = styled.div<{
+    isEnable?: boolean;
+}>`
     display: inline-block;
+    ${props => (props.isEnable == undefined || props.isEnable) ? '' : Styles.CSS_BUTTON_DISABLE}
     width: 100%;
     height: 140px;
     background-color: #9b8f8f28;

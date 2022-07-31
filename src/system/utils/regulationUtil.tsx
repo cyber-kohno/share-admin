@@ -21,9 +21,10 @@ namespace RegulationUtil {
         outline: string;
         isUnique: boolean;
         inputType: FieldInputType;
-        list?: string[];
+        list: string;
         min?: number;
         max?: number;
+        width: number;
     }
 
     export const createInitialField = (index: number): FieldProps => {
@@ -32,6 +33,8 @@ namespace RegulationUtil {
             outline: '',
             inputType: 'text',
             isUnique: false,
+            list: '',
+            width: 200
         }
     }
 

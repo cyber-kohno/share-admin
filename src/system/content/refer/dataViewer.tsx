@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import styled, { css } from "styled-components";
 import Styles from "../../design/styles";
 import DatabaseUtil from "../../utils/databaseUtil";
@@ -12,6 +12,7 @@ export type FieldProps = {
     name: string,
     inputType: RegulationUtil.FieldInputType;
     list: string;
+    width: number;
 };
 
 const DataViewer = (props: {
@@ -20,11 +21,20 @@ const DataViewer = (props: {
     const { store, setStore } = useContext(GlobalContext);
 
     const [fieldList, setFieldList] = useState<FieldProps[]>([]);
+    const [dataRecordList, setDataRecordList] = useState<string[][]>([]);
     const [isDispDialog, setDispDialog] = useState(false);
+    const [focusIndex, setFocusIndex] = useState(-1);
+
+    const headerRef = useRef<HTMLDivElement>({} as HTMLDivElement);
+    const tableRef = useRef<HTMLDivElement>({} as HTMLDivElement);
 
     useEffect(() => {
         findFieldList(props.conte.seq).then((res) => {
             setFieldList(res);
+            findDataRecordList(props.conte.seq, res).then((resList) => {
+                console.log(resList);
+                setDataRecordList(resList.map((record) => res.map((field, j) => record[`val${j}`])));
+            });
         });
     }, []);
 
@@ -32,12 +42,25 @@ const DataViewer = (props: {
         setDispDialog(true);
     }
 
-    const columnList = fieldList.map((field, i) => {
-
+    const columnJsxList = fieldList.map((field, i) => {
         return (
-            <_Column key={i} width={200}>{field.name}</_Column>
+            <_Column key={i} width={field.width}>{field.name}</_Column>
         );
     });
+
+    const dataRecordJsxList = useMemo(() => {
+        return dataRecordList.map((record, i) => {
+            return (
+                <_Record key={i} onClick={()=>{
+                    setFocusIndex(i);
+                }}>
+                    {record.map((col, j) => (
+                        <_Cell key={j} width={fieldList[j].width} isFocus={focusIndex === i}>{col}</_Cell>
+                    ))}
+                </_Record>
+            );
+        });
+    }, [dataRecordList, focusIndex]);
 
     return (
         <_Wrap>
@@ -52,11 +75,18 @@ const DataViewer = (props: {
                 <_Switch isFocus={false}>ツリー</_Switch>
             </_OperationRecord>
             <_TableFrame>
-                <_Record>{columnList}</_Record>
+                <_Header ref={headerRef}>
+                    <_Record>{columnJsxList}</_Record>
+                </_Header>
+                <_Body ref={tableRef} onScroll={() => {
+                    headerRef.current.scrollTo({ left: tableRef.current.scrollLeft })
+                }}>
+                    {dataRecordJsxList}
+                </_Body>
             </_TableFrame>
             <_OperationRecord>
                 <_Button isEnable={true} onClick={openDetailDialog}>レコード追加</_Button>
-                <_Button isEnable={true}>編集</_Button>
+                <_Button isEnable={focusIndex !== -1}>編集</_Button>
             </_OperationRecord>
             {!isDispDialog ? <></> : <DataEditDialog
                 fieldList={fieldList}
@@ -65,10 +95,15 @@ const DataViewer = (props: {
                     const nextRow = `(case when ${rowQuery} is null then -1 else ${rowQuery} end) + 1`;
                     const insertRcmstQuery = `INSERT INTO rcmsttbl(conteseq, row, user) VALUES('${props.conte.seq}', ${nextRow}, '${store.user?.seq}')`;
                     const insertRcvalQuery = `INSERT INTO rcvaltbl(conteseq, row, field_no, data) VALUES ${forms.map((form, i) => (
-                        `('${props.conte.seq}', ${nextRow}, ${i}, '${form}')`
+                        `('${props.conte.seq}', ${rowQuery}, ${i}, '${form}')`
                     )).join(',')}`;
                     DatabaseUtil.sendQueryRequestToAPI('update', [insertRcmstQuery, insertRcvalQuery].join(';')).then(() => {
                         alert('登録成功');
+                        // レコードの更新
+                        findDataRecordList(props.conte.seq, fieldList).then((resList) => {
+                            console.log(resList);
+                            setDataRecordList(resList.map((record) => fieldList.map((field, j) => record[`val${j}`])));
+                        });
                     });
                 }}
                 close={() => { setDispDialog(false) }}
@@ -80,11 +115,23 @@ const DataViewer = (props: {
 export default DataViewer;
 
 
-const findFieldList = async (seq: number) => {
-    const sql = `SELECT no, name, input_type as inputType, list FROM fieldtbl WHERE contents = ${seq} ORDER BY no`;
+const findFieldList = async (conteseq: number) => {
+    const sql = `SELECT no, name, input_type as inputType, list, width FROM fieldtbl WHERE contents = ${conteseq} ORDER BY no`;
     const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
     const results = await response.json();
     return results as FieldProps[];
+};
+const findDataRecordList = async (conteseq: number, fieldList: FieldProps[]) => {
+    const sql = `
+        SELECT user, ${fieldList.map((field, i) => `(select data from rcvaltbl where conteseq = ${conteseq} and row = rcmst.row and field_no = ${i}) as val${i}`).join(',')}
+        FROM rcmsttbl rcmst
+        WHERE conteseq = ${conteseq}
+        GROUP BY row
+    `;
+    console.log(sql);
+    const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
+    const results = await response.json();
+    return results as any[];
 };
 
 const _Wrap = styled.div`
@@ -102,15 +149,31 @@ const _TableFrame = styled.div`
     height: calc(100% - 200px);
     background-color: #a0a0a0;
     text-align: left;
+`;
+const _Header = styled.div`
+    display: inline-block;
+    width: 100%;
+    /* height: calc(100% - 200px); */
+    background-color: #cc6565;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+`;
+const _Body = styled.div`
+    display: inline-block;
+    width: 100%;
+    height: calc(100% - 60px);
+    /* background-color: #c9d1e4; */
+    text-align: left;
     overflow: auto;
 `;
 
 const _Record = styled.div<{
 }>`
-    display: inline-block;
+    display: block;
     min-width: 100%;
     height: 30px;
-    background-color: #a5d1ac;
+    background-color: #e7e7e7;
     white-space: nowrap;
 `;
 
@@ -128,6 +191,28 @@ const _Column = styled.div<{
     padding: 0 0 0 10px;
     font-weight: 600;
     font-family: 'Noto Serif JP', serif;
+    vertical-align: top;
+    text-align: center;
+`;
+const _Cell = styled.div<{
+    width: number;
+    isFocus: boolean;
+}>`
+    display: inline-block;
+    width: ${props => props.width}px;
+    height: 30px;
+    background-color: #d9dbda71;
+    ${props => !props.isFocus ? '' : css`
+        background-color: #ebda8c7d;
+    `}
+    border: solid 1px #0000006f;
+    box-sizing: border-box;
+    font-size: 18px;
+    color: #474747;
+    padding: 0 0 0 10px;
+    font-weight: 600;
+    font-family: 'Noto Serif JP', serif;
+    vertical-align: top;
 `;
 
 

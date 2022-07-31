@@ -41,7 +41,7 @@ const AccountManage = () => {
             <_Button
                 isEnable={!isFirstCreate}
                 onClick={() => {
-                    store.mode = 'entrance';
+                    store.transition.backFrame();
                     setStore({ ...store });
                 }}
             >戻る</_Button>
