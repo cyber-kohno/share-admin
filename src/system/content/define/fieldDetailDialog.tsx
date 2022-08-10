@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import styled from "styled-components";
 import Styles from "../../design/styles";
 import RegulationUtil from "../../utils/regulationUtil";
@@ -7,59 +7,72 @@ import { GlobalContext } from "../entry/entry";
 const FieldDetailDialog = (props: {
     index: number;
     fieldProps: RegulationUtil.FieldProps;
-    update: () => void;
+    apply: (fieldCache: RegulationUtil.FieldProps) => void;
     close: () => void;
 }) => {
-    const { store, setStore } = useContext(GlobalContext);
+    // const { store, setStore } = useContext(GlobalContext);
+
+    const [fieldCache, setFieldCache] = useState({ ...props.fieldProps });
+
+    const update = () => { setFieldCache({ ...fieldCache }) };
 
     return (
         <_Wrap>
             <_Frame>
-                <_Record>
-                    <_Title>連番</_Title>
-                    <_TextLabel>{props.index + 1}</_TextLabel>
-                </_Record>
-                <_Record>
-                    <_Title>項目名</_Title>
-                    <_TextForm type={'text'} value={props.fieldProps.name} onChange={(e) => {
-                        props.fieldProps.name = e.target.value;
-                        props.update();
-                    }} />
-                </_Record>
-                <_Record>
-                    <_Title>項目の概要</_Title>
-                    <_TextArea value={props.fieldProps.outline} onChange={(e) => {
-                        props.fieldProps.outline = e.target.value;
-                        props.update();
-                    }} />
-                </_Record>
-                <_Record>
-                    <_Title>入力方式</_Title>
-                    <_Combobox value={props.fieldProps.inputType} onChange={(e) => {
-                        props.fieldProps.inputType = e.target.value as RegulationUtil.FieldInputType;
-                        props.update();
-                    }} >
-                        {RegulationUtil.FieldInputTypeItems.map((item, i) => (
-                            <option key={i} value={item.key}>{item.message}</option>
-                        ))}
-                    </_Combobox>
-                </_Record>
-                <_Record isEnable={props.fieldProps.inputType === 'combobox'}>
-                    <_Title>選択肢</_Title>
-                    <_TextForm type={'text'} value={props.fieldProps.list} onChange={(e) => {
-                        props.fieldProps.list = e.target.value;
-                        props.update();
-                    }} />
-                </_Record>
-                <_Record>
-                    <_Title>テーブル列幅</_Title>
-                    <_TextForm type={'number'} value={props.fieldProps.width} onChange={(e) => {
-                        props.fieldProps.width = Number(e.target.value);
-                        props.update();
-                    }} />
-                </_Record>
+                <_Scroll>
+                    <_Record>
+                        <_Title>連番</_Title>
+                        <_TextLabel>{props.index + 1}</_TextLabel>
+                    </_Record>
+                    <_Record>
+                        <_Title>項目名</_Title>
+                        <_TextForm type={'text'} value={fieldCache.name} onChange={(e) => {
+                            fieldCache.name = e.target.value;
+                            update();
+                        }} />
+                    </_Record>
+                    <_Record>
+                        <_Title>項目の概要</_Title>
+                        <_TextArea value={fieldCache.outline} onChange={(e) => {
+                            fieldCache.outline = e.target.value;
+                            update();
+                        }} />
+                    </_Record>
+                    <_Record>
+                        <_Title>入力方式</_Title>
+                        <_Combobox value={fieldCache.inputType} onChange={(e) => {
+                            fieldCache.inputType = e.target.value as RegulationUtil.FieldInputType;
+                            update();
+                        }} >
+                            {RegulationUtil.FieldInputTypeItems.map((item, i) => (
+                                <option key={i} value={item.key}>{item.message}</option>
+                            ))}
+                        </_Combobox>
+                    </_Record>
+                    <_Record isEnable={props.fieldProps.inputType === 'combobox'}>
+                        <_Title>選択肢</_Title>
+                        <_TextForm type={'text'} value={fieldCache.list} onChange={(e) => {
+                            fieldCache.list = e.target.value;
+                            update();
+                        }} />
+                    </_Record>
+                    <_Record isEnable={true}>
+                        <_Title>初期値</_Title>
+                        <_TextForm type={'text'} value={fieldCache.default} onChange={(e) => {
+                            fieldCache.default = e.target.value;
+                            update();
+                        }} />
+                    </_Record>
+                    <_Record>
+                        <_Title>テーブル列幅</_Title>
+                        <_TextForm type={'number'} value={fieldCache.width} onChange={(e) => {
+                            fieldCache.width = Number(e.target.value);
+                            update();
+                        }} />
+                    </_Record>
+                </_Scroll>
                 <_Button isEnable={true} onClick={() => {
-                    props.update();
+                    props.apply(fieldCache);
                     props.close();
                 }}>更新</_Button>
                 <_Button isEnable={true} onClick={props.close}>キャンセル</_Button>
@@ -79,12 +92,13 @@ const _Wrap = styled.div`
     width: 100%;
     height: 100%;
     background-color: #0000008b;
-    text-align: left;
+    text-align: center;
 `;
 
 const _Frame = styled.div`
     display: inline-block;
-    width: calc(100% - 30px);
+    /* width: calc(100% - 30px); */
+    max-width: 960px;
     height: calc(100% - 30px);
     /* margin: 4px 0 0 4px; */
     background-color: #b6ccbcdd;
@@ -93,6 +107,20 @@ const _Frame = styled.div`
     /* border: 1px solid #ffffffc3; */
     text-align: left;
 `;
+
+const _Scroll = styled.div`
+    display: inline-block;
+    width: calc(100% - 10px);
+    height: calc(100% - 45px);
+    /* margin: 4px 0 0 4px; */
+    background-color: #a7b8ac;
+    border-radius: 4px;
+    margin: 5px 0 0 0;
+    /* border: 1px solid #ffffffc3; */
+    text-align: center;
+    overflow: auto;
+`;
+
 
 const _Record = styled.div<{
     isEnable?: boolean;

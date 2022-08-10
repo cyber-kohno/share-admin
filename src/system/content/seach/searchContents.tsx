@@ -48,17 +48,17 @@ const SearchContents = (props: {
 
                     const referData = () => {
                         // store.mode = 'refer';
-                    store.transition.setNextFrame(<DataViewer conte={conteList[focusIndex]}/>);
-                        setStore({...store});
+                        store.transition.setNextFrame(<DataViewer conte={conteList[focusIndex]} />);
+                        setStore({ ...store });
                     }
                     const isFocus = focusIndex === i;
                     let operationJsx = <></>;
                     if (isFocus) {
                         operationJsx = (
                             <_Record>
-                                <_Button isEnable={true} onClick={()=>{}}>定義変更</_Button>
+                                <_Button isEnable={true} onClick={() => { }}>定義変更</_Button>
                                 <_Button isEnable={true} onClick={referData}>データ</_Button>
-                                <_Button isEnable={true} onClick={()=>{}}>オプション</_Button>
+                                <_Button isEnable={true} onClick={() => { }}>オプション</_Button>
                             </_Record>
                         );
                     }

@@ -24,6 +24,7 @@ namespace RegulationUtil {
         list: string;
         min?: number;
         max?: number;
+        default: string;
         width: number;
     }
 
@@ -34,6 +35,7 @@ namespace RegulationUtil {
             inputType: 'text',
             isUnique: false,
             list: '',
+            default: '',
             width: 200
         }
     }

@@ -1,21 +1,22 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import Styles from "../../design/styles";
-import RegulationUtil from "../../utils/regulationUtil";
-import { GlobalContext } from "../entry/entry";
 import { FieldProps } from "./dataViewer";
 
-const DataEditDialog = (props: {
+export type DataEditDialogProps = {
     fieldList: FieldProps[];
+    forms: string[];
     regist: (forms: string[]) => void;
     close: () => void;
-}) => {
-    const { store, setStore } = useContext(GlobalContext);
+};
+
+const DataEditDialog = (props: DataEditDialogProps) => {
+    // const { store, setStore } = useContext(GlobalContext);
 
     const [forms, setForms] = useState<string[]>([]);
 
     useEffect(() => {
-        setForms(new Array<string>(props.fieldList.length).fill(''));
+        setForms(props.forms);
     }, []);
 
     const fieldJsxList = forms.map((form, i) => {
@@ -60,7 +61,9 @@ const DataEditDialog = (props: {
     return (
         <_Wrap>
             <_Frame>
-                {fieldJsxList}
+                <_Scroll>
+                    {fieldJsxList}
+                </_Scroll>
                 <_Button isEnable={true} onClick={() => {
                     props.regist(forms);
                     props.close();
@@ -82,19 +85,34 @@ const _Wrap = styled.div`
     width: 100%;
     height: 100%;
     background-color: #0000008b;
-    text-align: left;
+    text-align: center;
 `;
 
 const _Frame = styled.div`
     display: inline-block;
-    width: calc(100% - 30px);
-    height: calc(100% - 30px);
+    position: relative;
+    width: calc(100% - 20px);
+    max-width: 960px;
+    height: calc(100% - 20px);
     /* margin: 4px 0 0 4px; */
     background-color: #b6ccbcdd;
     border-radius: 4px;
-    margin: 15px 0 0 15px;
+    margin: 10px 0 0 0;
     /* border: 1px solid #ffffffc3; */
-    text-align: left;
+    text-align: center;
+`;
+
+const _Scroll = styled.div`
+    display: inline-block;
+    width: calc(100% - 10px);
+    height: calc(100% - 45px);
+    /* margin: 4px 0 0 4px; */
+    background-color: #a7b8ac;
+    border-radius: 4px;
+    margin: 5px 0 0 0;
+    /* border: 1px solid #ffffffc3; */
+    text-align: center;
+    overflow: auto;
 `;
 
 const _Record = styled.div`

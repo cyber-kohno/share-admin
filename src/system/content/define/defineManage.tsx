@@ -109,7 +109,10 @@ const Regulation = () => {
             {!isDispDialog ? <></> : <FieldDetailDialog
                 index={focusIndex}
                 fieldProps={fieldList[focusIndex]}
-                update={() => { setFieldList(fieldList.slice()) }}
+                apply={(fieldCache: RegulationUtil.FieldProps) => {
+                    fieldList[focusIndex] = fieldCache;
+                    setFieldList(fieldList.slice())
+                }}
                 close={() => { setDispDialog(false) }}
             />}
         </_Wrap>

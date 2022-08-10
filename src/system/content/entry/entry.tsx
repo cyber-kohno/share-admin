@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { HashRouter, Route, Switch, useLocation, useParams } from "react-router-dom";
 import styled from "styled-components";
 import ReactLoading from 'react-loading';
@@ -7,6 +7,8 @@ import Store, { initialStore } from "../../redux/store/store";
 import DatabaseUtil from "../../utils/databaseUtil";
 import SystemUtil from "../../utils/systemUtil";
 import ManageFrame from "./manageFrame";
+import DataViewer from "../refer/dataViewer";
+import DirectConte from "./directConte";
 
 const Entry = () => {
 
@@ -15,17 +17,17 @@ const Entry = () => {
 
         const state = window.history.state;
         if (!state) {
-          window.history.replaceState({ isExit: true }, '');
-          window.history.pushState({ isExit: false }, '');
+            window.history.replaceState({ isExit: true }, '');
+            window.history.pushState({ isExit: false }, '');
         }
 
         const exit = () => {
-            alert('ブラウザバック');
+            // alert('ブラウザバック');
         }
-    
+
         window.addEventListener('popstate', exit);
         return () => {
-          window.removeEventListener('popstate', exit);
+            window.removeEventListener('popstate', exit);
         }
     }, []);
 
@@ -110,10 +112,8 @@ const Router = () => {
                                 <_Text>aas</_Text>
                             </_Wrap>
                         </Route>
-                        <Route path="/viewer" exact >
-                            <_Wrap>
-                                <_Text>{str}</_Text>
-                            </_Wrap>
+                        <Route path="/conte" exact >
+                            <DirectConte hashKey={str} />
                         </Route>
                     </Switch>
                 </_Main>
@@ -123,7 +123,6 @@ const Router = () => {
 }
 
 export default Entry;
-
 
 const _LoadFrame = styled.div`
     display: inline-block;
