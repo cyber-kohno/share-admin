@@ -2,8 +2,9 @@ import { Base64 } from "js-base64";
 
 export namespace DatabaseUtil {
 
-    // export const API_DOMAIN = 'https://vh-sqlite.glitch.me';
-    export const API_DOMAIN = 'http://localhost:4112';
+    export const API_DOMAIN = 'https://crud-server001.glitch.me/';
+    // export const API_DOMAIN = 'http://localhost:4112';
+    
 
 
     export const createQueryRequestInit = (sql: string): RequestInit => {
@@ -30,13 +31,6 @@ export namespace DatabaseUtil {
      * @returns 圧縮後の文字列
      */
     export const gZip = (val: string) => {
-        // // エンコード
-        // const content = encodeURIComponent(val);
-        // // 圧縮
-        // const result = zlib.gzipSync(content);
-        // // Buffer => base64変換
-        // const value = result.toString('base64');
-        // return value;
         return Base64.encode(val);
     }
 
@@ -46,13 +40,6 @@ export namespace DatabaseUtil {
      * @returns 複号後の文字列
      */
     export const unZip = (val: string) => {
-        // // base64 => Bufferに変換
-        // const buffer = Buffer.from(val, 'base64')
-        // // 復号化
-        // const result = zlib.unzipSync(buffer)
-        // // デコード
-        // const str = decodeURIComponent(result.toString())
-        // return str;
         return Base64.decode(val);
     }
 
@@ -81,6 +68,30 @@ export namespace DatabaseUtil {
 
         return format_str;
     };
+
+
+    export const findMasterConte = async (seq: number) => {
+        const sql = `SELECT * FROM contetbl conte WHERE seq = ${seq}`;
+        const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
+        const results = await response.json() as any[];
+        return results[0];
+    };
+
+    export const findMasterFieldList = async (seq: number) => {
+        const sql = `SELECT * FROM fieldtbl conte WHERE conteseq = ${seq} ORDER BY sort_no`;
+        const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
+        return await response.json() as any[];
+    };
+
+    export const createUpdateQuery = (tableName: string, itemSets: { col: string, val: string | number }[], whereQuery: string) => {
+        return `UPDATE ${tableName} SET ${itemSets.map(item => `${item.col} = '${item.val}'`).join(',')} WHERE ${whereQuery}`;
+    }
+
+    export const createInsertQuery = (tableName: string, itemSets: { col: string, val: string | number, isQuat?: boolean }[]) => {
+        const cols = itemSets.map(item => item.col).join(',');
+        const values = itemSets.map(item => (item.isQuat ?? true) ? `'${item.val}'` : `${item.val}`).join(',');
+        return `INSERT INTO ${tableName}(${cols}) VALUES(${values})`;
+    }
 }
 
 export default DatabaseUtil;

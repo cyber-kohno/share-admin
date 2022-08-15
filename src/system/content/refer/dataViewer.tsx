@@ -8,20 +8,20 @@ import { GlobalContext } from "../entry/entry";
 import { ConteProps } from "../seach/searchContents";
 import DataEditDialog, { DataEditDialogProps } from "./dataEditDialog";
 
-export type FieldProps = {
-    no: number
-    name: string,
-    inputType: RegulationUtil.FieldInputType;
-    list: string;
-    width: number;
-};
+// export type FieldProps = {
+//     no: number
+//     name: string,
+//     inputType: RegulationUtil.FieldInputType;
+//     list: string;
+//     width: number;
+// };
 
 const DataViewer = (props: {
     conte: ConteProps;
 }) => {
     const { store, setStore } = useContext(GlobalContext);
 
-    const [fieldList, setFieldList] = useState<FieldProps[]>([]);
+    const [fieldList, setFieldList] = useState<RegulationUtil.FieldProps[]>([]);
     const [dataRecordList, setDataRecordList] = useState<string[][]>([]);
     const [isFullScreen, setFullScreen] = useState(false);
     const [responseList, setResponseList] = useState<any[]>([]);
@@ -31,24 +31,41 @@ const DataViewer = (props: {
     const headerRef = useRef<HTMLDivElement>({} as HTMLDivElement);
     const tableRef = useRef<HTMLDivElement>({} as HTMLDivElement);
 
-    const updateDataRecordList = (fieldList: FieldProps[]) => {
+    const updateDataRecordList = (fieldList: RegulationUtil.FieldProps[]) => {
 
         findDataRecordList(props.conte.seq, fieldList).then((resList) => {
-            setResponseList(resList);
             console.log(resList);
+            setResponseList(resList);
             setDataRecordList(resList.map((record) => {
                 return fieldList.map((field, j) => {
                     const columnValue = record[`val${j}`];
-                    return columnValue;
+                    return columnValue ?? '';
                 });
             }));
         });
     }
 
     useEffect(() => {
-        findFieldList(props.conte.seq).then((res) => {
-            setFieldList(res);
-            updateDataRecordList(res);
+        // findFieldList(props.conte.seq).then((res) => {
+        //     setFieldList(res);
+        //     updateDataRecordList(res);
+        // });
+        DatabaseUtil.findMasterFieldList(props.conte.seq).then((resFields) => {
+            const masterFieldList: RegulationUtil.FieldProps[] = [];
+            resFields.forEach((field) => {
+                const fieldProps = RegulationUtil.createInitialField();
+                Object.keys(field).forEach((key) => {
+                    if (!['conteseq'].includes(key)) {
+                        const camelKey = SystemUtil.toCamelCase(key);
+                        const value = field[key] ?? '';
+                        // console.log(`key: [${key}], value: [${value}]`);
+                        (fieldProps as any)[camelKey] = value;
+                    }
+                });
+                masterFieldList.push(fieldProps);
+            });
+            setFieldList(masterFieldList);
+            updateDataRecordList(masterFieldList);
         });
     }, []);
 
@@ -99,6 +116,15 @@ const DataViewer = (props: {
 
     const editRecord = () => { openDetailDialog(false) };
     const createRecord = () => { openDetailDialog(true) };
+    const removeRecord = () => { 
+        const list: string[] = [];
+        list.push(`DELETE FROM rcvaltbl where conteseq = ${props.conte.seq} and row = ${focusIndex}`);
+        list.push(`DELETE FROM rcmsttbl where conteseq = ${props.conte.seq} and row = ${focusIndex}`);
+        DatabaseUtil.sendQueryRequestToAPI('update', list.join(';')).then(() => {
+            alert('削除成功');
+            updateDataRecordList(fieldList);
+        });
+     };
 
     const columnJsxList = fieldList.map((field, i) => {
         return (
@@ -132,8 +158,8 @@ const DataViewer = (props: {
                 <_MessageFrame><_Message>{url}</_Message></_MessageFrame>
                 <_OperationRecord>
                     <_Switch isFocus={false}>テーブル</_Switch>
-                    <_Switch isFocus={false}>統計</_Switch>
-                    <_Switch isFocus={false}>ツリー</_Switch>
+                    {/* <_Switch isFocus={false}>統計</_Switch>
+                    <_Switch isFocus={false}>ツリー</_Switch> */}
                 </_OperationRecord>
             </_HideArea>
             <_OperationRecord>
@@ -154,6 +180,7 @@ const DataViewer = (props: {
             </_TableFrame>
             <_OperationRecord>
                 <_Button isEnable={focusIndex !== -1} onClick={editRecord}>編集</_Button>
+                <_Button isEnable={focusIndex !== -1} onClick={removeRecord}>削除</_Button>
             </_OperationRecord>
             {dataEditDialogProps == null ? <></> : <DataEditDialog
                 fieldList={dataEditDialogProps.fieldList}
@@ -173,20 +200,23 @@ export default DataViewer;
  * @returns Promise[フィールド情報の配列]
  */
 const findFieldList = async (conteseq: number) => {
-    const sql = `SELECT no, name, input_type as inputType, list, width FROM fieldtbl WHERE contents = ${conteseq} ORDER BY no`;
+    const sql = `SELECT * FROM fieldtbl WHERE conteseq = ${conteseq} ORDER BY sort_no`;
     const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
     const results = await response.json();
-    return results as FieldProps[];
+    return results as any[];
 };
 
-const findDataRecordList = async (conteseq: number, fieldList: FieldProps[]) => {
+const findDataRecordList = async (conteseq: number, fieldList: RegulationUtil.FieldProps[]) => {
+    const subQuery = fieldList.map((field, i) => (
+        `(select data from rcvaltbl where conteseq = ${conteseq} and row = rcmst.row and field_no = ${i}) as val${i}`
+    )).join(',');
     const sql = `
-        SELECT user, row, ${fieldList.map((field, i) => `(select data from rcvaltbl where conteseq = ${conteseq} and row = rcmst.row and field_no = ${i}) as val${i}`).join(',')}
+        SELECT user, row, ${subQuery}
         FROM rcmsttbl rcmst
         WHERE conteseq = ${conteseq}
         GROUP BY row
     `;
-    console.log(sql);
+    // console.log(sql);
     const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
     const results = await response.json();
     return results as any[];
@@ -241,7 +271,7 @@ const _Record = styled.div<{
     display: block;
     min-width: 100%;
     height: 30px;
-    background-color: #e7e7e7;
+    /* background-color: #e7e7e7; */
     white-space: nowrap;
 `;
 
@@ -269,9 +299,9 @@ const _Cell = styled.div<{
     display: inline-block;
     width: ${props => props.width}px;
     height: 30px;
-    background-color: #d9dbda71;
+    background-color: #ffffff;
     ${props => !props.isFocus ? '' : css`
-        background-color: #ebda8c7d;
+        background-color: #ffeea3dc;
     `}
     border: solid 1px #0000006f;
     box-sizing: border-box;
@@ -281,6 +311,7 @@ const _Cell = styled.div<{
     font-weight: 600;
     font-family: 'Noto Serif JP', serif;
     vertical-align: top;
+    overflow: hidden;
 `;
 
 

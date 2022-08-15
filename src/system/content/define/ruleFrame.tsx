@@ -53,8 +53,8 @@ const RuleFrame = (props: {
             </_Record>
             <_Record>
                 <_Title>編集制限</_Title>
-                <_Combobox value={props.ruleProps.editAuth} onChange={(e) => {
-                    props.ruleProps.editAuth = e.target.value as RegulationUtil.EditAuth;
+                <_Combobox value={props.ruleProps.registAuth} onChange={(e) => {
+                    props.ruleProps.registAuth = e.target.value as RegulationUtil.EditAuth;
                     update();
                 }} >
                     {RegulationUtil.EditAuthItems.map((item, i) => (
@@ -62,10 +62,10 @@ const RuleFrame = (props: {
                     ))}
                 </_Combobox>
             </_Record>
-            <_Record isEnable={props.ruleProps.editAuth === 'user-limit'}>
+            <_Record isEnable={props.ruleProps.registAuth === 'user-limit'}>
                 <_Title>編集許可ユーザリスト</_Title>
             </_Record>
-            <_Record isEnable={props.ruleProps.editAuth === 'group-limit'}>
+            <_Record isEnable={props.ruleProps.registAuth === 'group-limit'}>
                 <_Title>編集許可グループリスト</_Title>
             </_Record>
             <_Record>
@@ -81,8 +81,8 @@ const RuleFrame = (props: {
             </_Record>
             <_Record>
                 <_Title>入力数制限</_Title>
-                <_Combobox value={props.ruleProps.addCount} onChange={(e) => {
-                    props.ruleProps.addCount = e.target.value as RegulationUtil.AddCount;
+                <_Combobox value={props.ruleProps.registLimit} onChange={(e) => {
+                    props.ruleProps.registLimit = e.target.value as RegulationUtil.RegistLimit;
                     update();
                 }} >
                     {RegulationUtil.AddCountItems.map((item, i) => (

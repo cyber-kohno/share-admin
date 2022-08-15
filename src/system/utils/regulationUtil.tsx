@@ -2,13 +2,16 @@
 namespace RegulationUtil {
 
     export type RuleProps = {
-        name: string;
         id: string;
+        name: string;
         outline: string;
+        manageUsers: string;
         referAuth: ReferAuth;
-        editAuth: EditAuth;
+        referUsers: string;
+        registAuth: EditAuth;
+        registUsers: string;
         searchLimit: SearchLimit;
-        addCount: AddCount;
+        registLimit: RegistLimit;
         fixAuth: FixAuth;
         viewCreator: ViewCreator;
         available: Available;
@@ -16,10 +19,34 @@ namespace RegulationUtil {
         openTo: string;
     }
 
+    export const getInitialRuleProps = (): RuleProps => {
+        return {
+            id: '',
+            name: '',
+            outline: '',
+            referAuth: 'no-login',
+            referUsers: '{}',
+            registAuth: 'login',
+            registUsers: '',
+            manageUsers: '',
+            searchLimit: 'free',
+            registLimit: 'unlimited',
+            fixAuth: 'creator-only',
+            viewCreator: 'always',
+            available: 'close',
+            openFrom: '',
+            openTo: ''
+        };
+    }
+
     export type FieldProps = {
+        fieldNo: number;
+        sortNo: number;
         name: string;
+        keyflg: string;
+        required: string;
+        contUnique: string;
         outline: string;
-        isUnique: boolean;
         inputType: FieldInputType;
         list: string;
         min?: number;
@@ -28,19 +55,23 @@ namespace RegulationUtil {
         width: number;
     }
 
-    export const createInitialField = (index: number): FieldProps => {
+    export const createInitialField = (): FieldProps => {
         return {
-            name: `項目${index + 1}`,
+            fieldNo: -1,
+            sortNo: -1,
+            name: `項目名`,
+            keyflg: '',
+            required: '',
+            contUnique: '',
             outline: '',
             inputType: 'text',
-            isUnique: false,
             list: '',
             default: '',
             width: 200
         }
     }
 
-    export type FieldInputType = 'number' | 'text' | 'combobox' | 'sentence';
+    export type FieldInputType = 'number' | 'text' | 'combobox' | 'sentence' | 'image';
     export const FieldInputTypeItems: {
         key: FieldInputType;
         message: string;
@@ -49,6 +80,7 @@ namespace RegulationUtil {
             { key: 'text', message: '文字列' },
             { key: 'combobox', message: '選択肢' },
             { key: 'sentence', message: '文章（複数行）' },
+            { key: 'image', message: '画像' },
         ];
 
     export type ReferAuth = 'no-login' | 'login' | 'user-limit' | 'group-limit' | 'owner-only';
@@ -86,10 +118,10 @@ namespace RegulationUtil {
             { key: 'limit', message: '検索制限をする' },
         ];
 
-    export type AddCount = 'once' | 'unlimited';
+    export type RegistLimit = 'once' | 'unlimited';
 
     export const AddCountItems: {
-        key: AddCount;
+        key: RegistLimit;
         message: string;
     }[] = [
             { key: 'once', message: '1ユーザ1件のみ入力可能（アンケート用）' },
@@ -115,7 +147,7 @@ namespace RegulationUtil {
             { key: 'none', message: '常に非表示' },
             { key: 'any', message: 'データ作成時に任意で表示' },
         ];
-        
+
     export type Available = 'close' | 'open' | 'range';
     export const AvailableItems: {
         key: Available;

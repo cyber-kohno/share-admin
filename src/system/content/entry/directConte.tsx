@@ -12,6 +12,7 @@ const DirectConte = (props: {
 }) => {
     const { store, setStore } = useContext(GlobalContext);
     const conteseq = SystemUtil.getDecryptionedConteSeq(props.hashKey);
+    console.log(conteseq);
     useEffect(() => {
         findContentsList(conteseq).then(contList => {
             if (contList.length > 0) {
@@ -25,7 +26,7 @@ const DirectConte = (props: {
 }
 
 const findContentsList = async (conteseq: number) => {
-    const subQuery = `(SELECT count(*) from fieldtbl WHERE contents = conte.seq) as cnt`;
+    const subQuery = `(SELECT count(*) from fieldtbl WHERE conteseq = conte.seq) as cnt`;
     const sql = `SELECT seq, id, name, outline, ${subQuery} FROM contetbl conte WHERE seq = ${conteseq}`;
     const response = await DatabaseUtil.sendQueryRequestToAPI('select', sql);
     const results = await response.json();

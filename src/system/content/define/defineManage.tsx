@@ -1,35 +1,76 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled, { css } from "styled-components";
 import Styles from "../../design/styles";
 import DatabaseUtil from "../../utils/databaseUtil";
 import RegulationUtil from "../../utils/regulationUtil";
+import SystemUtil from "../../utils/systemUtil";
 import { GlobalContext } from "../entry/entry";
 import FieldDetailDialog from "./fieldDetailDialog";
 import FieldFrame from "./fieldFrame";
 import RuleFrame from "./ruleFrame";
 
-const Regulation = () => {
+const Regulation = (props: {
+    masterConteSeq: number;
+}) => {
     const { store, setStore } = useContext(GlobalContext);
 
     const [isRule, setRule] = useState(true);
     const [isDispDialog, setDispDialog] = useState(false);
     const [focusIndex, setFocusIndex] = useState(0);
-    const [ruleProps, setRuleProps] = useState<RegulationUtil.RuleProps>({
-        id: '',
-        name: '',
-        referAuth: 'no-login',
-        editAuth: 'login',
-        outline: '',
-        searchLimit: 'free',
-        addCount: 'unlimited',
-        fixAuth: 'creator-only',
-        viewCreator: 'always',
-        available: 'close',
-        openFrom: '',
-        openTo: ''
-    });
+    const [ruleProps, setRuleProps] = useState<RegulationUtil.RuleProps>(RegulationUtil.getInitialRuleProps());
 
-    const [fieldList, setFieldList] = useState<RegulationUtil.FieldProps[]>([RegulationUtil.createInitialField(0)]);
+    const [fieldList, setFieldList] = useState<RegulationUtil.FieldProps[]>([RegulationUtil.createInitialField()]);
+    const [maxFiledNo, setMaxFieldNo] = useState(-1);
+    const [removeList, setRemoveList] = useState<number[]>([]);
+
+    const isUpdate = props.masterConteSeq !== -1;
+
+    useEffect(() => {
+        const seq = props.masterConteSeq;
+        if (seq !== -1) {
+            DatabaseUtil.findMasterConte(seq).then((resConte) => {
+                // ruleProps.name = res['name'];
+
+                Object.keys(resConte).forEach((key) => {
+                    if (!['seq', 'owner', 'createdy', 'updatedy'].includes(key)) {
+                        const camelKey = SystemUtil.toCamelCase(key);
+                        const value = resConte[key] ?? '';
+                        // console.log(`key: [${key}], value: [${value}]`);
+                        (ruleProps as any)[camelKey] = value;
+                    }
+                });
+                setRuleProps({ ...ruleProps });
+
+                DatabaseUtil.findMasterFieldList(seq).then((resFields) => {
+                    const masterFieldList: RegulationUtil.FieldProps[] = [];
+                    let maxFieldNo = -1;
+                    resFields.forEach((field) => {
+                        const fieldProps = RegulationUtil.createInitialField();
+                        Object.keys(field).forEach((key) => {
+                            if (!['conteseq'].includes(key)) {
+                                const camelKey = SystemUtil.toCamelCase(key);
+                                const value = field[key] ?? '';
+                                console.log(`key: [${key}], value: [${value}]`);
+                                (fieldProps as any)[camelKey] = value;
+                                if (key === 'field_no' && maxFieldNo < Number(value)) {
+                                    maxFieldNo = Number(value);
+                                }
+                            }
+                        });
+                        masterFieldList.push(fieldProps);
+                    });
+                    console.log(maxFieldNo);
+                    setMaxFieldNo(maxFieldNo);
+                    setFieldList(masterFieldList);
+                });
+                // findMasterFieldList(seq).then((fieldList)=> {
+                //     fieldList.map(()=> {
+
+                //     });
+                // });
+            });
+        }
+    }, []);
 
     const isInputOK = () => {
         return true;
@@ -40,32 +81,100 @@ const Regulation = () => {
     }
 
     const register = () => {
-        findConteSeq().then((contentsSeq) => {
-            console.log(contentsSeq);
+        if (store.user == null) return;
+        const user = store.user;
+        if (!isUpdate) {
+            findNextConteSeq().then((contentsSeq) => {
+                const list: string[] = [];
+                // 新規登録時のコンテンツのインサート
+                list.push(DatabaseUtil.createInsertQuery('contetbl', [
+                    { col: 'owner', val: user.seq },
+                    { col: 'id', val: ruleProps.id },
+                    { col: 'name', val: ruleProps.name },
+                    { col: 'outline', val: ruleProps.outline },
+                    { col: 'refer_auth', val: ruleProps.referAuth },
+                    { col: 'regist_auth', val: ruleProps.registAuth },
+                    { col: 'search_limit', val: ruleProps.searchLimit },
+                    { col: 'regist_limit', val: ruleProps.registLimit },
+                    { col: 'fix_auth', val: ruleProps.fixAuth },
+                    { col: 'view_creator', val: ruleProps.viewCreator },
+                    { col: 'createdy', val: `datetime('now', 'localtime')`, isQuat: false },
+                    { col: 'updatedy', val: `datetime('now', 'localtime')`, isQuat: false },
+                ]));
+                // 新規登録時のフィールドのインサート
+                fieldList.forEach((field, i) => {
+                    list.push(DatabaseUtil.createInsertQuery('fieldtbl', [
+                        { col: 'conteseq', val: contentsSeq + 1 },
+                        { col: 'field_no', val: i },
+                        { col: 'sort_no', val: i },
+                        { col: 'name', val: field.name },
+                        { col: 'keyflg', val: field.keyflg },
+                        { col: 'required', val: field.required },
+                        { col: 'cont_unique', val: field.contUnique },
+                        { col: 'outline', val: field.outline },
+                        { col: 'input_type', val: field.inputType },
+                        { col: 'list', val: field.list },
+                        { col: 'width', val: field.width },
+                    ]));
+                });
+                DatabaseUtil.sendQueryRequestToAPI('update', list.join(';')).then(() => {
+                    window.location.reload();
+                });
+            })
+        } else {
             const list: string[] = [];
-            list.push(`INSERT INTO contetbl(
-                owner, id, name, outline, refer_auth, edit_auth,
-                search_limit, add_count, fix_auth, view_creator,
-                createdy, updatedy
-            ) VALUES(
-                ${store.user?.seq}, '${ruleProps.id}', '${ruleProps.name}', '${ruleProps.outline}',
-                '${ruleProps.referAuth}', '${ruleProps.editAuth}', '${ruleProps.searchLimit}',
-                '${ruleProps.addCount}', '${ruleProps.fixAuth}', '${ruleProps.viewCreator}',
-                datetime('now', 'localtime'), datetime('now', 'localtime')
-            )`);
+            // 更新時のコンテンツのアップデート
+            list.push(DatabaseUtil.createUpdateQuery('contetbl', [
+                { col: 'id', val: ruleProps.id },
+                { col: 'name', val: ruleProps.name },
+                { col: 'outline', val: ruleProps.outline },
+                { col: 'refer_auth', val: ruleProps.referAuth },
+                { col: 'regist_auth', val: ruleProps.registAuth },
+                { col: 'search_limit', val: ruleProps.searchLimit },
+            ], `seq = ${props.masterConteSeq}`));
+
             fieldList.forEach((field, i) => {
-                list.push(`INSERT INTO fieldtbl(
-                        contents, no, name, outline, cont_unique, input_type, list, width
-                    ) VALUES(
-                        ${contentsSeq + 1}, ${i}, '${field.name}', '${field.outline}',
-                        '${field.isUnique ? '1' : ''}', '${field.inputType}', '${field.list}', ${field.width}
-                    )
-                `);
+                let nextFieldNo = maxFiledNo + 1;
+                if (field.fieldNo === -1) {
+                    // 更新時のコンテンツのインサート（新たに追加したフィールド）
+                    list.push(DatabaseUtil.createInsertQuery('fieldtbl', [
+                        { col: 'conteseq', val: props.masterConteSeq },
+                        { col: 'field_no', val: nextFieldNo },
+                        { col: 'sort_no', val: i },
+                        { col: 'name', val: field.name },
+                        { col: 'keyflg', val: field.keyflg },
+                        { col: 'required', val: field.required },
+                        { col: 'cont_unique', val: field.contUnique },
+                        { col: 'outline', val: field.outline },
+                        { col: 'input_type', val: field.inputType },
+                        { col: 'list', val: field.list },
+                        { col: 'width', val: field.width },
+                    ]));
+                    nextFieldNo++;
+                } else {
+                    // 更新時のコンテンツのアップデート（既存のフィールド）
+                    list.push(DatabaseUtil.createUpdateQuery('fieldtbl', [
+                        { col: 'sort_no', val: i },
+                        { col: 'name', val: field.name },
+                        { col: 'keyflg', val: field.keyflg },
+                        { col: 'required', val: field.required },
+                        { col: 'cont_unique', val: field.contUnique },
+                        { col: 'outline', val: field.outline },
+                        { col: 'input_type', val: field.inputType },
+                        { col: 'list', val: field.list },
+                        { col: 'width', val: field.width },
+                    ], `conteseq = ${props.masterConteSeq} and field_no = ${field.fieldNo}`));
+
+                }
             });
+            if (removeList.length > 0) {
+                list.push(`DELETE FROM fieldtbl where conteseq = ${props.masterConteSeq} and field_no in(${removeList.join(',')})`);
+                list.push(`DELETE FROM rcvaltbl where conteseq = ${props.masterConteSeq} and field_no in(${removeList.join(',')})`);
+            }
             DatabaseUtil.sendQueryRequestToAPI('update', list.join(';')).then(() => {
                 window.location.reload();
             });
-        })
+        }
     }
 
     return (
@@ -99,13 +208,15 @@ const Regulation = () => {
                         openDetailDialog={openDetailDialog}
                         focusIndex={focusIndex}
                         setFocusIndex={setFocusIndex}
+                        removeList={removeList}
+                        setRemoveList={setRemoveList}
                     />
                 }
             </_Frame>
             <_Button
                 isEnable={isInputOK()}
                 onClick={register}
-            >{true ? '登録' : '更新'}</_Button>
+            >{!isUpdate ? '登録' : '更新'}</_Button>
             {!isDispDialog ? <></> : <FieldDetailDialog
                 index={focusIndex}
                 fieldProps={fieldList[focusIndex]}
@@ -121,7 +232,7 @@ const Regulation = () => {
 
 export default Regulation;
 
-const findConteSeq = async () => {
+const findNextConteSeq = async () => {
     const response = await DatabaseUtil.sendQueryRequestToAPI('select', `SELECT seq FROM SQLITE_SEQUENCE where name = 'contetbl'`);
     const results = await response.json();
     return results[0].seq as number;

@@ -32,6 +32,33 @@ const FieldDetailDialog = (props: {
                         }} />
                     </_Record>
                     <_Record>
+                        <_Title>キー</_Title>
+                        <_CheckDiv>
+                            <_CheckForm type={'checkbox'} checked={fieldCache.keyflg === '1'} onChange={(e) => {
+                                fieldCache.keyflg = e.target.checked ? '1' : '';
+                                update();
+                            }} /><_CheckText>データを特定するためのキー項目とする</_CheckText>
+                        </_CheckDiv>
+                    </_Record>
+                    <_Record>
+                        <_Title>必須</_Title>
+                        <_CheckDiv>
+                            <_CheckForm type={'checkbox'} checked={fieldCache.required === '1'} onChange={(e) => {
+                                fieldCache.required = e.target.checked ? '1' : '';
+                                update();
+                            }} /><_CheckText>必須項目とする</_CheckText>
+                        </_CheckDiv>
+                    </_Record>
+                    <_Record>
+                        <_Title>重複許可</_Title>
+                        <_CheckDiv>
+                            <_CheckForm type={'checkbox'} checked={fieldCache.contUnique === '1'} onChange={(e) => {
+                                fieldCache.contUnique = e.target.checked ? '1' : '';
+                                update();
+                            }} /><_CheckText>重複を認めない</_CheckText>
+                        </_CheckDiv>
+                    </_Record>
+                    <_Record>
                         <_Title>項目の概要</_Title>
                         <_TextArea value={fieldCache.outline} onChange={(e) => {
                             fieldCache.outline = e.target.value;
@@ -157,6 +184,29 @@ const _TextForm = styled.input<{
     padding: 0 0 0 4px;
     box-sizing: border-box;
     color: #330f00;
+`;
+
+const _CheckDiv = styled.div<{
+}>`
+    display: inline-block;
+    width: calc(100% - 22px);
+    height: 30px;
+    font-size: 18px;
+    margin: 0 0 0 10px;
+    padding: 0 0 0 4px;
+    box-sizing: border-box;
+    background-color: #ffd90028;
+`;
+const _CheckText = styled.span<{
+}>`
+    color: #330f00;
+    /* background-color: #9b8f8f28; */
+`;
+const _CheckForm = styled.input<{
+}>`
+    /* width: 30px;
+    height: 30px; */
+    /* background-color: #e6424228; */
 `;
 
 const _TextArea = styled.textarea<{

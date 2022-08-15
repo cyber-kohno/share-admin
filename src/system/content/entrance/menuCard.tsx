@@ -1,15 +1,18 @@
 import { useContext } from "react";
 import styled from "styled-components";
+import Styles from "../../design/styles";
 import { MediaQueryContext } from "../entry/manageFrame";
 
 const MenuCard = (props: {
     title: string;
+    isEnable: boolean;
     detail: JSX.Element;
     callback: () => void;
 }) => {
     return (
         <_Wrap
             isWide={false}
+            isEnable={props.isEnable}
             onClick={props.callback}
         >
             <_Title>{props.title}</_Title>
@@ -24,6 +27,7 @@ export default MenuCard;
 
 const _Wrap = styled.div<{
     isWide: boolean;
+    isEnable: boolean;
 }>`
     display: inline-block;
     width: calc(100% - 22px);
@@ -34,6 +38,7 @@ const _Wrap = styled.div<{
     border: solid 2px #d1d1d1;
     box-sizing: border-box;
     margin: 5px;
+    ${props => props.isEnable ? '' : Styles.CSS_BUTTON_DISABLE}
     &:hover {
         opacity: 0.6;
     }

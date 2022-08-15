@@ -14,19 +14,22 @@ const Entrance = () => {
     const { store, setStore } = useContext(GlobalContext);
     // const mediaQuery = useContext(MediaQueryContext);
 
+    const isLogin = store.user != null;
     return (
         <_Wrap>
             <MenuCard
                 title={'コンテンツ作成'}
+                isEnable={isLogin}
                 detail={<>コンテンツの参照・編集権限の設定を行い、<br />データの定義を行います。</>}
                 callback={() => {
                     // store.mode = 'regulation';
-                    store.transition.setNextFrame(<Regulation />);
+                    store.transition.setNextFrame(<Regulation masterConteSeq={-1} />);
                     setStore({ ...store });
                 }}
             />
             <MenuCard
                 title={'コンテンツ検索'}
+                isEnable={isLogin}
                 detail={<>公開されたコンテンツを検索します。</>}
                 callback={() => {
                     // store.mode = 'search';
@@ -36,6 +39,7 @@ const Entrance = () => {
             />
             <MenuCard
                 title={'グループ作成'}
+                isEnable={isLogin}
                 detail={<>{[
                     '自身がオーナーのグループを作成います。',
                     'グループの参加者に権限を制御することが可能です。',
@@ -48,6 +52,7 @@ const Entrance = () => {
             />
             <MenuCard
                 title={'アカウント管理'}
+                isEnable={isLogin}
                 detail={<>{[
                     'ユーザIDを変更することができます。',
                 ].map((str, i) => <span key={i}>{str}<br /></span>)}</>}

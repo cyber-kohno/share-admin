@@ -1,10 +1,10 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import Styles from "../../design/styles";
-import { FieldProps } from "./dataViewer";
+import RegulationUtil from "../../utils/regulationUtil";
 
 export type DataEditDialogProps = {
-    fieldList: FieldProps[];
+    fieldList: RegulationUtil.FieldProps[];
     forms: string[];
     regist: (forms: string[]) => void;
     close: () => void;
@@ -49,11 +49,20 @@ const DataEditDialog = (props: DataEditDialogProps) => {
                         setForms(forms.slice());
                     }} />
                 );
+                case 'image': return (<>
+                    <_TextForm value={form} onChange={(e) => {
+                        forms[i] = e.target.value;
+                        setForms(forms.slice());
+                    }} />
+                    <_Image src={form} />
+                </>);
             }
         }
+        const inputType = RegulationUtil.FieldInputTypeItems.find(item => item.key === field.inputType);
+        const imputTypeName = inputType == undefined ? '' : inputType.message;
         return (
             <_Record key={i}>
-                <_Title>{field.no + 1}.{field.name}</_Title>
+                <_Text><_Name>{field.sortNo + 1}.{field.name}</_Name> [{imputTypeName}]</_Text>
                 {getFormJsx()}
             </_Record>
         );
@@ -124,7 +133,7 @@ const _Record = styled.div`
     margin: 5px 0 0 0;
 `;
 
-const _Title = styled.div<{
+const _Text = styled.div<{
 }>`
     display: inline-block;
     width: 100%;
@@ -134,6 +143,10 @@ const _Title = styled.div<{
     box-sizing: border-box;
     font-weight: 600;
     font-family: 'Noto Serif JP', serif;
+    color: #ffeaa4ae;
+`;
+const _Name = styled.span<{
+}>`
     color: #330f00;
 `;
 
@@ -147,6 +160,12 @@ const _TextForm = styled.input<{
     padding: 0 0 0 4px;
     box-sizing: border-box;
     color: #330f00;
+`;
+const _Image = styled.img<{
+}>`
+    display: inline-block;
+    width: 200px;
+    height: 200px;
 `;
 
 const _NumberForm = styled.input<{
