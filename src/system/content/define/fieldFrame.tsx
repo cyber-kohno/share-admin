@@ -73,8 +73,8 @@ const FieldFrame = (props: {
                 const fieldNoJsx = field.fieldNo === -1 ? <></> : <_No> [{field.fieldNo}]</_No>;
                 const itemList: string[] = [];
                 if(field.keyflg === '1') itemList.push('主キー');
-                if(field.required === '1') itemList.push('必須');
-                if(field.contUnique === '1') itemList.push('ユニーク');
+                if(field.validate === '1') itemList.push('必須');
+                if(field.unqflg === '1') itemList.push('ユニーク');
                 const inputType = RegulationUtil.FieldInputTypeItems.find(item => item.key === field.inputType);
                 return (<div key={i}>
                     <_ItemFrame isFocus={isFocus} onClick={select}>

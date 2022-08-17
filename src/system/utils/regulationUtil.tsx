@@ -44,8 +44,8 @@ namespace RegulationUtil {
         sortNo: number;
         name: string;
         keyflg: string;
-        required: string;
-        contUnique: string;
+        unqflg: string;
+        validate: string;
         outline: string;
         inputType: FieldInputType;
         list: string;
@@ -61,8 +61,8 @@ namespace RegulationUtil {
             sortNo: -1,
             name: `項目名`,
             keyflg: '',
-            required: '',
-            contUnique: '',
+            validate: '',
+            unqflg: '',
             outline: '',
             inputType: 'text',
             list: '',

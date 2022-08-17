@@ -2,6 +2,7 @@
   "name": "share-admin",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://crud.crystal-guage.com",
   "dependencies": {
     "@auth0/auth0-react": "^1.10.2",
     "@material-ui/core": "^4.11.4",

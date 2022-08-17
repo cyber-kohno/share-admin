@@ -91,7 +91,7 @@ const Router = () => {
         <GlobalContext.Provider value={{ store, setStore }}>
             <_Wrap>
                 <_Header>
-                    <_Logo>share-admin</_Logo>
+                    <_Logo>CRUD</_Logo>
                     {!isAuthenticated ? <_Button onClick={() => {
                         loginWithRedirect();
                     }}>ログイン</_Button> : <>

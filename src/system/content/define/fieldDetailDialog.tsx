@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import styled from "styled-components";
 import Styles from "../../design/styles";
 import RegulationUtil from "../../utils/regulationUtil";
+import ValidateUtil from "../../utils/validateUtil";
 import { GlobalContext } from "../entry/entry";
 
 const FieldDetailDialog = (props: {
@@ -14,7 +15,10 @@ const FieldDetailDialog = (props: {
 
     const [fieldCache, setFieldCache] = useState({ ...props.fieldProps });
 
+    const [errorName, setErrorName] = useState<ValidateUtil.ErrorProps | null>(null);
+
     const update = () => { setFieldCache({ ...fieldCache }) };
+
 
     return (
         <_Wrap>
@@ -27,9 +31,15 @@ const FieldDetailDialog = (props: {
                     <_Record>
                         <_Title>項目名</_Title>
                         <_TextForm type={'text'} value={fieldCache.name} onChange={(e) => {
+                            const str = e.target.value;
                             fieldCache.name = e.target.value;
+                            setErrorName(ValidateUtil.executeChecks([
+                                () => ValidateUtil.checkEmpty(str),
+                                () => ValidateUtil.checkLengthLimit(str, 20)
+                            ]));
                             update();
                         }} />
+                        {/* <_Error>{errorName}</_Error> */}
                     </_Record>
                     <_Record>
                         <_Title>キー</_Title>
@@ -41,19 +51,10 @@ const FieldDetailDialog = (props: {
                         </_CheckDiv>
                     </_Record>
                     <_Record>
-                        <_Title>必須</_Title>
-                        <_CheckDiv>
-                            <_CheckForm type={'checkbox'} checked={fieldCache.required === '1'} onChange={(e) => {
-                                fieldCache.required = e.target.checked ? '1' : '';
-                                update();
-                            }} /><_CheckText>必須項目とする</_CheckText>
-                        </_CheckDiv>
-                    </_Record>
-                    <_Record>
                         <_Title>重複許可</_Title>
                         <_CheckDiv>
-                            <_CheckForm type={'checkbox'} checked={fieldCache.contUnique === '1'} onChange={(e) => {
-                                fieldCache.contUnique = e.target.checked ? '1' : '';
+                            <_CheckForm type={'checkbox'} checked={fieldCache.unqflg === '1'} onChange={(e) => {
+                                fieldCache.unqflg = e.target.checked ? '1' : '';
                                 update();
                             }} /><_CheckText>重複を認めない</_CheckText>
                         </_CheckDiv>
@@ -75,6 +76,15 @@ const FieldDetailDialog = (props: {
                                 <option key={i} value={item.key}>{item.message}</option>
                             ))}
                         </_Combobox>
+                    </_Record>
+                    <_Record>
+                        <_Title>必須</_Title>
+                        <_CheckDiv>
+                            <_CheckForm type={'checkbox'} checked={fieldCache.validate === '1'} onChange={(e) => {
+                                fieldCache.validate = e.target.checked ? '1' : '';
+                                update();
+                            }} /><_CheckText>必須項目とする</_CheckText>
+                        </_CheckDiv>
                     </_Record>
                     <_Record isEnable={props.fieldProps.inputType === 'combobox'}>
                         <_Title>選択肢</_Title>
@@ -155,7 +165,7 @@ const _Record = styled.div<{
     display: inline-block;
     ${props => (props.isEnable == undefined || props.isEnable) ? '' : Styles.CSS_BUTTON_DISABLE}
     width: 100%;
-    height: 140px;
+    min-height: 140px;
     background-color: #9b8f8f28;
     text-align: left;
     margin: 5px 0 0 0;
@@ -270,4 +280,17 @@ const _Button = styled.div<{
     &: hover{
         background-color: #ffffff96;
     }
+`;
+
+const _Error = styled.div<{
+}>`
+    display: inline-block;
+    width: calc(100% - 22px);
+    height: 30px;
+    font-size: 18px;
+    margin: 0 0 0 10px;
+    padding: 0 0 0 4px;
+    box-sizing: border-box;
+    /* background-color: #ffd90028; */
+    color: red;
 `;

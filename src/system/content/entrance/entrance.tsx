@@ -12,6 +12,7 @@ import MenuCard from "./menuCard";
 
 const Entrance = () => {
     const { store, setStore } = useContext(GlobalContext);
+    const {  isAuthenticated } = useAuth0();
     // const mediaQuery = useContext(MediaQueryContext);
 
     const isLogin = store.user != null;
@@ -41,7 +42,7 @@ const Entrance = () => {
                 title={'グループ作成'}
                 isEnable={isLogin}
                 detail={<>{[
-                    '自身がオーナーのグループを作成います。',
+                    '自身がオーナーのグループを作成します。',
                     'グループの参加者に権限を制御することが可能です。',
                     'グループ参加のURLを発行することができます。'
                 ].map((str, i) => <span key={i}>{str}<br /></span>)}</>}
@@ -52,7 +53,7 @@ const Entrance = () => {
             />
             <MenuCard
                 title={'アカウント管理'}
-                isEnable={isLogin}
+                isEnable={isAuthenticated}
                 detail={<>{[
                     'ユーザIDを変更することができます。',
                 ].map((str, i) => <span key={i}>{str}<br /></span>)}</>}
