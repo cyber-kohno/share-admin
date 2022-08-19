@@ -1,37 +1,43 @@
+import { useState } from "react";
 import styled from "styled-components";
+import Styles from "../design/styles";
+import ValidateUtil from "./validateUtil";
 
 namespace FormUtil {
 
     export const InputItem = (props: {
+        title: string;
         formValue: string;
         setFormValue: (formValue: string) => void;
-        inputType: 'text' | 'combobox' | 'checkbox';
+        inputType: 'text' | 'combobox' | 'checkbox' | 'long';
+        validators: ValidateUtil.Checker[];
+        listItems: {value: string, message: string}[];
+        checkMessage: string;
     }) => {
+        const [errors, setErrors] = useState<ValidateUtil.ErrorProps[]>([]);
 
         const changeAction = (value: string) => {
             props.setFormValue(value);
+            const errors = ValidateUtil.executeChecks(value, props.validators);
+            setErrors(errors);
+            if(errors.length > 0) {
+                
+            }
         }
 
         const getFormJsx = () => {
             switch (props.inputType) {
                 case 'text': return (
                     <_TextForm type={'text'} value={props.formValue} onChange={(e) => {
-                        const str = e.target.value;
-                        fieldCache.name = e.target.value;
-                        setErrorName(ValidateUtil.executeChecks([
-                            () => ValidateUtil.checkEmpty(str),
-                            () => ValidateUtil.checkLengthLimit(str, 20)
-                        ]));
-                        update();
+                        changeAction(e.target.value);
                     }} />
                 );
                 case 'combobox': return (
                     <_Combobox value={props.formValue} onChange={(e) => {
-                        // fieldCache.inputType = e.target.value as RegulationUtil.FieldInputType;
-                        // update();
+                        changeAction(e.target.value);
                     }} >
-                        {RegulationUtil.FieldInputTypeItems.map((item, i) => (
-                            <option key={i} value={item.key}>{item.message}</option>
+                        {props.listItems.map((item, i) => (
+                            <option key={i} value={item.value}>{item.message}</option>
                         ))}
                     </_Combobox>
                 );
@@ -40,23 +46,26 @@ namespace FormUtil {
                         type={'checkbox'}
                         checked={props.formValue === '1'}
                         onChange={(e) => {
-                            props.setFormValue(e.target.checked ? '1' : '');
-                        }} /><_CheckText>必須項目とする</_CheckText>
+                            changeAction(e.target.checked ? '1' : '');
+                        }} /><_CheckText>{props.checkMessage}</_CheckText>
                 </>);
             }
         }
+
+        const errorJsxList = errors.map((error, i) => (
+            <_Error key={i}>{error.message}</_Error>
+        ));
         return (
             <_Record>
-                <_Title>入力方式</_Title>
+                <_Title>{props.title}</_Title>
                 {getFormJsx()}
+                {errorJsxList}
             </_Record>
         );
     }
 }
 
 export default FormUtil;
-
-
 
 const _Record = styled.div<{
     isEnable?: boolean;
@@ -157,4 +166,17 @@ const _Combobox = styled.select<{
     color: #3529a0;
     background-color: #ffffff78;
     border: solid 1px #000;
+`;
+
+const _Error = styled.div<{
+}>`
+    display: inline-block;
+    width: calc(100% - 22px);
+    height: 30px;
+    font-size: 18px;
+    margin: 0 0 0 10px;
+    padding: 0 0 0 4px;
+    box-sizing: border-box;
+    /* background-color: #ffd90028; */
+    color: red;
 `;

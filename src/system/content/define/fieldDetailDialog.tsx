@@ -34,8 +34,8 @@ const FieldDetailDialog = (props: {
                             const str = e.target.value;
                             fieldCache.name = e.target.value;
                             setErrorName(ValidateUtil.executeChecks([
-                                () => ValidateUtil.checkEmpty(str),
-                                () => ValidateUtil.checkLengthLimit(str, 20)
+                                () => ValidateUtil.getEmptyChecker(str),
+                                () => ValidateUtil.getLengthLimitChecker(str, 20)
                             ]));
                             update();
                         }} />

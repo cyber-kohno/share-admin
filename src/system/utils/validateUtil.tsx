@@ -7,31 +7,36 @@ namespace ValidateUtil {
         message: string;
     }
 
-    export const executeChecks = (checkList: (() => null | ErrorProps)[]): null | ErrorProps => {
-        for (let i = 0; i < checkList.length; i++) {
-            const check = checkList[i];
-            const result = check();
-            if (result != null) return result;
+    export type Checker = (str: string) => ErrorProps | null;
+    
+    export const executeChecks = (str: string, checkerList: Checker[]) => {
+        const list: ErrorProps[] = [];
+        for (let i = 0; i < checkerList.length; i++) {
+            const check = checkerList[i];
+            const result = check(str);
+            if (result != null) list.push(result);
         }
-        return null;
+        return list;
     }
 
-    export const checkHalfEisu = (str: string): ErrorProps | null => {
+
+    export const getHalfEisuChecker = (): Checker => {
         const target = 'abcdefghijklmnopqrstuvwxyzABCDEFGHYJKLMNOPQRSTUVWXYZ0123456789_-';
-        return checkStr(str, target) ? null : { type: 'value', message: '半角英数ではありません。' };
+        const error: ErrorProps = { type: 'value', message: '半角英数ではありません。' };
+        return (str: string) => checkStr(str, target) ? null : error;
     }
 
-    export const checkEmpty = (str: string): ErrorProps | null => {
-        return str !== '' ? null : { type: 'required', message: '必須項目です。' };
+    export const getEmptyChecker = (): Checker => {
+        return (str: string) => str !== '' ? null : { type: 'required', message: '必須項目です。' };
     }
 
-    export const checkLengthRange = (str: string, minLen: number, maxLen: number): ErrorProps | null => {
-        return str.length >= minLen && str.length <= maxLen ? null :
+    export const getLengthRangeChecker = (minLen: number, maxLen: number): Checker => {
+        return (str: string) => str.length >= minLen && str.length <= maxLen ? null :
             { type: 'value', message: `${minLen}～${maxLen}文字の範囲内で入力して下さい。` };
     }
 
-    export const checkLengthLimit = (str: string, maxLen: number): ErrorProps | null => {
-        return str.length <= maxLen ? null : { type: 'value', message: `${maxLen}文字以内で入力して下さい。` };
+    export const getLengthLimitChecker = (maxLen: number): Checker => {
+        return (str: string) => str.length <= maxLen ? null : { type: 'value', message: `${maxLen}文字以内で入力して下さい。` };
     }
 
     const checkStr = (str: string, target: string) => {
