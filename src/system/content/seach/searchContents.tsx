@@ -4,7 +4,7 @@ import Styles from "../../design/styles";
 import DatabaseUtil from "../../utils/databaseUtil";
 import RegulationUtil from "../../utils/regulationUtil";
 import SystemUtil from "../../utils/systemUtil";
-import Regulation from "../define/defineManage";
+import ContentsDefManager from "../define/contentsDefManage";
 import { GlobalContext } from "../entry/entry";
 import DataViewer from "../refer/dataViewer";
 
@@ -56,7 +56,7 @@ const SearchContents = (props: {
 
                     const defineUpdate = () => {
                         // store.mode = 'refer';
-                        store.transition.setNextFrame(<Regulation masterConteSeq={conte.seq} />);
+                        store.transition.setNextFrame(<ContentsDefManager masterConteSeq={conte.seq} />);
                         setStore({ ...store });
                     }
 

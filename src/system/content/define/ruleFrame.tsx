@@ -1,39 +1,60 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import styled, { css } from "styled-components";
 import Styles from "../../design/styles";
+import FormUtil from "../../utils/formUtil";
 import RegulationUtil from "../../utils/regulationUtil";
+import ValidateUtil from "../../utils/validateUtil";
 import { GlobalContext } from "../entry/entry";
+import ListManager from "./listManager";
 
 const RuleFrame = (props: {
     ruleProps: RegulationUtil.RuleProps;
     setRuleProps: (ruleProps: RegulationUtil.RuleProps) => void;
 }) => {
 
-    const update = () => props.setRuleProps({ ...props.ruleProps });
+    const rule = props.ruleProps;
+    const update = () => props.setRuleProps({ ...rule });
+
+    const [acceptFormId, setAcceptFormId] = useState(true);
+
+    const [joinUserList, setJoinUserList] = useState<string[]>([]);
 
     return (
         <_Wrap>
-            <_Record>
-                <_Title>コンテンツ識別ID</_Title>
-                <_TextForm type={'text'} value={props.ruleProps.id} onChange={(e) => {
-                    props.ruleProps.id = e.target.value;
-                    update();
-                }} />
-            </_Record>
-            <_Record>
-                <_Title>コンテンツ名</_Title>
-                <_TextForm type={'text'} value={props.ruleProps.name} onChange={(e) => {
-                    props.ruleProps.name = e.target.value;
-                    update();
-                }} />
-            </_Record>
-            <_Record>
-                <_Title>コンテンツの概要</_Title>
-                <_TextArea value={props.ruleProps.outline} onChange={(e) => {
-                    props.ruleProps.outline = e.target.value;
-                    update();
-                }} />
-            </_Record>
+            <FormUtil.InputItem
+                title="コンテンツ識別ID"
+                formValue={rule.id}
+                setFormValue={(value: string) => { rule.id = value; update(); }}
+                formWidth={300}
+                inputType="text"
+                validators={[
+                    ValidateUtil.getEmptyChecker(),
+                    ValidateUtil.getLengthLimitChecker(20)
+                ]}
+            // setAcceptForm={setAcceptFormName}
+            />
+            <FormUtil.InputItem
+                title="コンテンツ名"
+                formValue={rule.name}
+                setFormValue={(value: string) => { rule.name = value; update(); }}
+                // formWidth={400}
+                inputType="text"
+                validators={[
+                    ValidateUtil.getEmptyChecker(),
+                    ValidateUtil.getLengthLimitChecker(30)
+                ]}
+            // setAcceptForm={setAcceptFormName}
+            />
+            <FormUtil.InputItem
+                title="コンテンツの概要"
+                formValue={rule.outline}
+                setFormValue={(value: string) => { rule.outline = value; update(); }}
+                inputType="sentence"
+                validators={[
+                    ValidateUtil.getLengthLimitChecker(100)
+                ]}
+            // setAcceptForm={setAcceptFormOutline}
+            />
             <_Record>
                 <_Title>参照制限</_Title>
                 <_Combobox value={props.ruleProps.referAuth} onChange={(e) => {
@@ -47,6 +68,10 @@ const RuleFrame = (props: {
             </_Record>
             <_Record isEnable={props.ruleProps.referAuth === 'user-limit'}>
                 <_Title>参照許可ユーザリスト</_Title>
+                <ListManager.Component
+                    userList={joinUserList}
+                    setUserList={setJoinUserList}
+                />
             </_Record>
             <_Record isEnable={props.ruleProps.referAuth === 'group-limit'}>
                 <_Title>参照許可グループリスト</_Title>
@@ -146,7 +171,8 @@ const _Record = styled.div<{
     display: inline-block;
     ${props => (props.isEnable == undefined || props.isEnable) ? '' : Styles.CSS_BUTTON_DISABLE}
     width: 100%;
-    height: 140px;
+    min-height: 140px;
+    padding: 0 0 4px 0;
     background-color: #9b8f8f28;
     text-align: left;
     margin: 5px 0 0 0;

@@ -128,7 +128,7 @@ const DataViewer = (props: {
 
     const columnJsxList = fieldList.map((field, i) => {
         return (
-            <_Column key={i} width={field.width}>{field.name}</_Column>
+            <_Column key={i} width={field.colWidth}>{field.name}</_Column>
         );
     });
 
@@ -139,7 +139,7 @@ const DataViewer = (props: {
                     setFocusIndex(i);
                 }}>
                     {record.map((col, j) => (
-                        <_Cell key={j} width={fieldList[j].width} isFocus={focusIndex === i}>{col}</_Cell>
+                        <_Cell key={j} width={fieldList[j].colWidth} isFocus={focusIndex === i}>{col}</_Cell>
                     ))}
                 </_Record>
             );

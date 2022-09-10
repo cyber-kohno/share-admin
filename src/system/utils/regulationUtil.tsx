@@ -19,7 +19,7 @@ namespace RegulationUtil {
         openTo: string;
     }
 
-    export const getInitialRuleProps = (): RuleProps => {
+    export const createInitialRuleProps = (): RuleProps => {
         return {
             id: '',
             name: '',
@@ -49,29 +49,61 @@ namespace RegulationUtil {
         outline: string;
         inputType: FieldInputType;
         list: string;
-        min?: number;
-        max?: number;
         default: string;
-        width: number;
+        formWidth: number;
+        colWidth: number;
     }
 
     export const createInitialField = (): FieldProps => {
         return {
             fieldNo: -1,
             sortNo: -1,
-            name: `項目名`,
+            name: '',
             keyflg: '',
-            validate: '',
+            validate: JSON.stringify({
+                required: false,
+                eisu: false,
+                useLenLimit: false,
+                useNumLimit: false
+            } as ValidateProps),
             unqflg: '',
             outline: '',
             inputType: 'text',
-            list: '',
+            list: JSON.stringify({
+                type: 'direct',
+                direct: ''
+            } as ListProps),
             default: '',
-            width: 200
+            formWidth: 200,
+            colWidth: 200
         }
     }
 
-    export type FieldInputType = 'number' | 'text' | 'combobox' | 'sentence' | 'image';
+    export type ListProps = {
+        type: ListType;
+        direct: string;
+    }
+
+    export type ListType = 'direct';
+    export const ListTypeItems: {
+        key: ListType;
+        message: string;
+    }[] = [
+            { key: 'direct', message: '直接入力' },
+        ];
+
+    export type ValidateProps = {
+        required: boolean;
+        eisu: boolean;
+        useLenLimit: boolean;
+        lenMin?: number;
+        lenMax?: number;
+        useNumLimit: boolean;
+        numMin?: number;
+        numMax?: number;
+    }
+
+    export type FieldInputType = 'number' | 'text' | 'combobox' | 'check' | 'sentence' | 'image';
     export const FieldInputTypeItems: {
         key: FieldInputType;
         message: string;
@@ -79,6 +111,7 @@ namespace RegulationUtil {
             { key: 'number', message: '数値' },
             { key: 'text', message: '文字列' },
             { key: 'combobox', message: '選択肢' },
+            { key: 'check', message: 'チェック' },
             { key: 'sentence', message: '文章（複数行）' },
             { key: 'image', message: '画像' },
         ];

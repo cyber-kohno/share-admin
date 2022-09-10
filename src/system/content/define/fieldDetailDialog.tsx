@@ -1,24 +1,107 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import Styles from "../../design/styles";
+import FormUtil from "../../utils/formUtil";
 import RegulationUtil from "../../utils/regulationUtil";
 import ValidateUtil from "../../utils/validateUtil";
 import { GlobalContext } from "../entry/entry";
 
 const FieldDetailDialog = (props: {
-    index: number;
+    isCreate: boolean;
     fieldProps: RegulationUtil.FieldProps;
     apply: (fieldCache: RegulationUtil.FieldProps) => void;
     close: () => void;
+    existNames: string[];
 }) => {
     // const { store, setStore } = useContext(GlobalContext);
 
-    const [fieldCache, setFieldCache] = useState({ ...props.fieldProps });
-
-    const [errorName, setErrorName] = useState<ValidateUtil.ErrorProps | null>(null);
+    const [fieldCache, setFieldCache] = useState<RegulationUtil.FieldProps>({ ...props.fieldProps });
+    // const [validate, setValidate] = useState<RegulationUtil.ValidateProps>({
+    //     isRequied: false,
+    //     isEisu: false
+    // });
+    const [direct, setDirect] = useState('');
+    const [isRequired, setRequired] = useState(false);
+    const [isEisu, setEisu] = useState(false);
+    const [useLenLimit, setUseLenLimit] = useState(false);
+    const [useNumLimit, setUseNumLimit] = useState(false);
+    const [lenMin, setLenMin] = useState(0);
+    const [lenMax, setLenMax] = useState(0);
+    const [numMin, setNumMin] = useState(0);
+    const [numMax, setNumMax] = useState(0);
 
     const update = () => { setFieldCache({ ...fieldCache }) };
 
+    const [acceptFormName, setAcceptFormName] = useState(true);
+    const [acceptFormOutline, setAcceptFormOutline] = useState(true);
+    const [acceptFormLenMin, setAcceptFormLenMin] = useState(true);
+    const [acceptFormLenMax, setAcceptFormLenMax] = useState(true);
+    const [acceptFormNumMin, setAcceptFormNumMin] = useState(true);
+    const [acceptFormNumMax, setAcceptFormNumMax] = useState(true);
+
+    const acceptFormList = [
+        acceptFormName,
+        acceptFormOutline,
+        acceptFormLenMin,
+        acceptFormLenMax,
+        acceptFormNumMin,
+        acceptFormNumMax
+    ];
+
+    useEffect(() => {
+        
+        const listProps = JSON.parse(props.fieldProps.list) as RegulationUtil.ListProps;
+        setDirect(listProps.direct);
+
+        const validateProps = JSON.parse(props.fieldProps.validate) as RegulationUtil.ValidateProps;
+        setRequired(validateProps.required);
+        setEisu(validateProps.eisu);
+        setUseLenLimit(validateProps.useLenLimit);
+        setUseNumLimit(validateProps.useNumLimit);
+        setLenMin(validateProps.lenMin ?? 0);
+        setLenMax(validateProps.lenMax ?? 0);
+        setNumMin(validateProps.numMin ?? 0);
+        setNumMax(validateProps.numMax ?? 0);
+    }, []);
+
+    const isInputOK = useMemo(() => {
+
+        let ret = true;
+        acceptFormList.some((acceptForm) => {
+            if (!acceptForm) {
+                ret = false;
+                return true;
+            }
+        });
+
+        return ret;
+    }, acceptFormList);
+
+    const applyAction = () => {
+        const list: RegulationUtil.ListProps = {
+            type: 'direct',
+            direct: direct
+        }
+        fieldCache.list = JSON.stringify(list);
+
+        const validate: RegulationUtil.ValidateProps = {
+            required: isRequired,
+            eisu: isEisu,
+            useLenLimit: useLenLimit,
+            useNumLimit: useNumLimit
+        };
+        if (useLenLimit) {
+            validate.lenMin = lenMin;
+            validate.lenMax = lenMax;
+        }
+        if (useNumLimit) {
+            validate.numMin = numMin;
+            validate.numMax = numMax;
+        }
+        fieldCache.validate = JSON.stringify(validate);
+        props.apply(fieldCache);
+        props.close();
+    };
 
     return (
         <_Wrap>
@@ -26,92 +109,197 @@ const FieldDetailDialog = (props: {
                 <_Scroll>
                     <_Record>
                         <_Title>連番</_Title>
-                        <_TextLabel>{props.index + 1}</_TextLabel>
+                        <_TextLabel>{fieldCache.fieldNo}</_TextLabel>
                     </_Record>
-                    <_Record>
-                        <_Title>項目名</_Title>
-                        <_TextForm type={'text'} value={fieldCache.name} onChange={(e) => {
-                            const str = e.target.value;
-                            fieldCache.name = e.target.value;
-                            setErrorName(ValidateUtil.executeChecks([
-                                () => ValidateUtil.getEmptyChecker(str),
-                                () => ValidateUtil.getLengthLimitChecker(str, 20)
-                            ]));
-                            update();
-                        }} />
-                        {/* <_Error>{errorName}</_Error> */}
-                    </_Record>
-                    <_Record>
-                        <_Title>キー</_Title>
-                        <_CheckDiv>
-                            <_CheckForm type={'checkbox'} checked={fieldCache.keyflg === '1'} onChange={(e) => {
-                                fieldCache.keyflg = e.target.checked ? '1' : '';
-                                update();
-                            }} /><_CheckText>データを特定するためのキー項目とする</_CheckText>
-                        </_CheckDiv>
-                    </_Record>
-                    <_Record>
-                        <_Title>重複許可</_Title>
-                        <_CheckDiv>
-                            <_CheckForm type={'checkbox'} checked={fieldCache.unqflg === '1'} onChange={(e) => {
-                                fieldCache.unqflg = e.target.checked ? '1' : '';
-                                update();
-                            }} /><_CheckText>重複を認めない</_CheckText>
-                        </_CheckDiv>
-                    </_Record>
-                    <_Record>
-                        <_Title>項目の概要</_Title>
-                        <_TextArea value={fieldCache.outline} onChange={(e) => {
-                            fieldCache.outline = e.target.value;
-                            update();
-                        }} />
-                    </_Record>
-                    <_Record>
-                        <_Title>入力方式</_Title>
-                        <_Combobox value={fieldCache.inputType} onChange={(e) => {
-                            fieldCache.inputType = e.target.value as RegulationUtil.FieldInputType;
-                            update();
-                        }} >
-                            {RegulationUtil.FieldInputTypeItems.map((item, i) => (
-                                <option key={i} value={item.key}>{item.message}</option>
-                            ))}
-                        </_Combobox>
-                    </_Record>
-                    <_Record>
-                        <_Title>必須</_Title>
-                        <_CheckDiv>
-                            <_CheckForm type={'checkbox'} checked={fieldCache.validate === '1'} onChange={(e) => {
-                                fieldCache.validate = e.target.checked ? '1' : '';
-                                update();
-                            }} /><_CheckText>必須項目とする</_CheckText>
-                        </_CheckDiv>
-                    </_Record>
-                    <_Record isEnable={props.fieldProps.inputType === 'combobox'}>
+                    <FormUtil.InputItem
+                        title="項目名"
+                        formValue={fieldCache.name}
+                        setFormValue={(value: string) => { fieldCache.name = value; update(); }}
+                        formWidth={400}
+                        inputType="text"
+                        validators={[
+                            ValidateUtil.getEmptyChecker(),
+                            ValidateUtil.getLengthLimitChecker(20),
+                            (str: string) => !props.existNames.includes(str) ? null : { type: 'relation', message: '既に存在する項目名と重複しています。' }
+                        ]}
+                        setAcceptForm={setAcceptFormName}
+                    />
+                    <FormUtil.InputItem
+                        title="キー"
+                        formValue={fieldCache.keyflg}
+                        setFormValue={(value: string) => { fieldCache.keyflg = value; update(); }}
+                        inputType="checkbox"
+                        checkMessage="データを特定するためのキー項目とする"
+                    />
+                    <FormUtil.InputItem
+                        title="重複許可"
+                        formValue={fieldCache.unqflg}
+                        setFormValue={(value: string) => { fieldCache.unqflg = value; update(); }}
+                        inputType="checkbox"
+                        checkMessage="重複を認めない"
+                    />
+                    <FormUtil.InputItem
+                        title="項目の概要"
+                        formValue={fieldCache.outline}
+                        setFormValue={(value: string) => { fieldCache.outline = value; update(); }}
+                        inputType="sentence"
+                        validators={[
+                            ValidateUtil.getLengthLimitChecker(100)
+                        ]}
+                        setAcceptForm={setAcceptFormOutline}
+                    />
+                    <FormUtil.InputItem
+                        title="入力方式"
+                        formValue={fieldCache.inputType}
+                        setFormValue={(value: string) => { (fieldCache.inputType as string) = value; update(); }}
+                        formWidth={200}
+                        inputType="combobox"
+                        listItems={RegulationUtil.FieldInputTypeItems.map(item => ({ value: item.key as string, message: item.message }))}
+                        extChangeProc={() => {
+                            if (!['number'].includes(fieldCache.inputType)) {
+                                setUseNumLimit(false);
+                            }
+                            if (!(['text', 'sentence'] as RegulationUtil.FieldInputType[]).includes(fieldCache.inputType)) {
+                                setUseLenLimit(false);
+                                setEisu(false);
+                            }
+                        }}
+                    />
+                    <FormUtil.InputItem
+                        title="選択肢"
+                        isEnable={['combobox'].includes(fieldCache.inputType)}
+                        formValue={direct}
+                        setFormValue={(value: string) => { setDirect(value) }}
+                        inputType="sentence"
+                    />
+                    {/* <_Record isEnable={props.fieldProps.inputType === 'combobox'}>
                         <_Title>選択肢</_Title>
                         <_TextForm type={'text'} value={fieldCache.list} onChange={(e) => {
                             fieldCache.list = e.target.value;
                             update();
                         }} />
-                    </_Record>
-                    <_Record isEnable={true}>
-                        <_Title>初期値</_Title>
-                        <_TextForm type={'text'} value={fieldCache.default} onChange={(e) => {
-                            fieldCache.default = e.target.value;
-                            update();
-                        }} />
-                    </_Record>
-                    <_Record>
-                        <_Title>テーブル列幅</_Title>
-                        <_TextForm type={'number'} value={fieldCache.width} onChange={(e) => {
-                            fieldCache.width = Number(e.target.value);
-                            update();
-                        }} />
-                    </_Record>
+                    </_Record> */}
+                    <FormUtil.InputItem
+                        title="必須"
+                        formValue={isRequired ? '1' : ''}
+                        setFormValue={(value: string) => {
+                            setRequired(value === '1');
+                        }}
+                        inputType="checkbox"
+                        checkMessage="必須項目とする"
+                    />
+                    <FormUtil.InputItem
+                        title="半角英数"
+                        formValue={isEisu ? '1' : ''}
+                        isEnable={(['text', 'sentence'] as RegulationUtil.FieldInputType[]).includes(fieldCache.inputType)}
+                        setFormValue={(value: string) => {
+                            setEisu(value === '1');
+                        }}
+                        formWidth={100}
+                        inputType="checkbox"
+                        checkMessage="半角英数字のみ許容する"
+                    />
+                    <FormUtil.InputItem
+                        title="文字数範囲制限"
+                        formValue={useLenLimit ? '1' : ''}
+                        isEnable={(['text', 'sentence'] as RegulationUtil.FieldInputType[]).includes(fieldCache.inputType)}
+                        setFormValue={(value: string) => {
+                            setUseLenLimit(value === '1');
+                        }}
+                        formWidth={100}
+                        inputType="checkbox"
+                        checkMessage="文字数の範囲制限を利用する"
+                    />
+                    <FormUtil.InputItem
+                        title="最低文字数"
+                        isEnable={useLenLimit}
+                        formValue={useLenLimit ? String(lenMin) : ''}
+                        formWidth={150}
+                        setFormValue={(value: string) => { setLenMin(Number(value)) }}
+                        inputType="number"
+                        validators={[
+                            (str: string) => Number(str) < lenMax ? null : { type: 'relation', message: '最大文字数より小さな値を設定して下さい。' }
+                        ]}
+                        setAcceptForm={setAcceptFormLenMin}
+                        relationForms={[String(lenMax)]}
+                        resetValue={String(1)}
+                    />
+                    <FormUtil.InputItem
+                        title="最大文字数"
+                        isEnable={useLenLimit}
+                        formValue={useLenLimit ? String(lenMax) : ''}
+                        formWidth={150}
+                        setFormValue={(value: string) => { setLenMax(Number(value)) }}
+                        inputType="number"
+                        validators={[
+                            (str: string) => Number(str) > lenMin ? null : { type: 'relation', message: '最低文字数より大きな値を設定して下さい。' }
+                        ]}
+                        setAcceptForm={setAcceptFormLenMax}
+                        relationForms={[String(lenMin)]}
+                        resetValue={String(1024)}
+                    />
+                    <FormUtil.InputItem
+                        title="数値範囲制限"
+                        formValue={useNumLimit ? '1' : ''}
+                        isEnable={['number'].includes(fieldCache.inputType)}
+                        setFormValue={(value: string) => {
+                            setUseNumLimit(value === '1');
+                        }}
+                        formWidth={150}
+                        inputType="checkbox"
+                        checkMessage="数値の範囲制限を利用する"
+                    />
+                    <FormUtil.InputItem
+                        title="最小値"
+                        isEnable={useNumLimit}
+                        formValue={useNumLimit ? String(numMin) : ''}
+                        formWidth={150}
+                        setFormValue={(value: string) => { setNumMin(Number(value)) }}
+                        inputType="number"
+                        validators={[
+                            (str: string) => Number(str) < numMax ? null : { type: 'relation', message: '最大値より小さな値を設定して下さい。' }
+                        ]}
+                        setAcceptForm={setAcceptFormNumMin}
+                        relationForms={[String(numMax)]}
+                        resetValue={String(0)}
+                    />
+                    <FormUtil.InputItem
+                        title="最大値"
+                        isEnable={useNumLimit}
+                        formValue={useNumLimit ? String(numMax) : ''}
+                        formWidth={150}
+                        setFormValue={(value: string) => { setNumMax(Number(value)) }}
+                        inputType="number"
+                        validators={[
+                            (str: string) => Number(str) > numMin ? null : { type: 'relation', message: '最小値より大きな値を設定して下さい。' }
+                        ]}
+                        setAcceptForm={setAcceptFormNumMax}
+                        relationForms={[String(numMin)]}
+                        resetValue={String(99999999)}
+                    />
+                    <FormUtil.InputItem
+                        title="初期値"
+                        formValue={fieldCache.default}
+                        formWidth={100}
+                        setFormValue={(value: string) => { fieldCache.default = value; update(); }}
+                        inputType="text"
+                    />
+                    <FormUtil.InputItem
+                        title="フォーム幅"
+                        formValue={String(fieldCache.formWidth)}
+                        formWidth={100}
+                        setFormValue={(value: string) => { fieldCache.formWidth = Number(value); update(); }}
+                        inputType="number"
+                    />
+                    <FormUtil.InputItem
+                        title="テーブル列幅"
+                        formValue={String(fieldCache.colWidth)}
+                        formWidth={100}
+                        setFormValue={(value: string) => { fieldCache.colWidth = Number(value); update(); }}
+                        inputType="number"
+                    />
                 </_Scroll>
-                <_Button isEnable={true} onClick={() => {
-                    props.apply(fieldCache);
-                    props.close();
-                }}>更新</_Button>
+                <_Button isEnable={isInputOK} onClick={applyAction}>{props.isCreate ? '作成' : '更新'}</_Button>
                 <_Button isEnable={true} onClick={props.close}>キャンセル</_Button>
             </_Frame>
         </_Wrap>

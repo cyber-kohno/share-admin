@@ -4,7 +4,7 @@ import styled from "styled-components";
 import useMedia from "use-media";
 import SystemUtil from "../../utils/systemUtil";
 import AccountManage from "../account/accountManage";
-import Regulation from "../define/defineManage";
+import ContentsDefManager from "../define/contentsDefManage";
 import { GlobalContext } from "../entry/entry";
 import { MediaQueryContext } from "../entry/manageFrame";
 import SearchContents from "../seach/searchContents";
@@ -24,7 +24,7 @@ const Entrance = () => {
                 detail={<>コンテンツの参照・編集権限の設定を行い、<br />データの定義を行います。</>}
                 callback={() => {
                     // store.mode = 'regulation';
-                    store.transition.setNextFrame(<Regulation masterConteSeq={-1} />);
+                    store.transition.setNextFrame(<ContentsDefManager masterConteSeq={-1} />);
                     setStore({ ...store });
                 }}
             />

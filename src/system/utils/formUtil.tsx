@@ -1,54 +1,153 @@
-import { useState } from "react";
-import styled from "styled-components";
+import { useEffect, useState } from "react";
+import styled, { css } from "styled-components";
 import Styles from "../design/styles";
 import ValidateUtil from "./validateUtil";
 
 namespace FormUtil {
 
+    export type InputManager = {
+        normal: boolean;
+        validators: ValidateUtil.Validator[];
+    }
+
+    export const ItemFrame = (props: {
+        title: string;
+        isEnable?: boolean;
+        innerJsx: JSX.Element;
+    }) => {
+        const isEnable = props.isEnable ?? true;
+
+        return (
+            <_Record isEnable={isEnable}>
+                <_Title>{props.title}</_Title>
+                {props.innerJsx}
+            </_Record>
+        );
+    }
+
     export const InputItem = (props: {
         title: string;
         formValue: string;
+        formWidth?: number;
+        isEnable?: boolean;
         setFormValue: (formValue: string) => void;
-        inputType: 'text' | 'combobox' | 'checkbox' | 'long';
-        validators: ValidateUtil.Checker[];
-        listItems: {value: string, message: string}[];
-        checkMessage: string;
+        inputType: 'text' | 'number' | 'combobox' | 'checkbox' | 'sentence';
+        validators?: ValidateUtil.Validator[];
+        setAcceptForm?: (isAccept: boolean) => void;
+        relationForms?: string[];
+        listItems?: { value: string, message: string }[];
+        checkMessage?: string;
+        extChangeProc?: () => void;
+        resetValue?: string;
     }) => {
+
+        const isEnable = props.isEnable ?? true;
         const [errors, setErrors] = useState<ValidateUtil.ErrorProps[]>([]);
+
+        useEffect(() => {
+            if (!isEnable) {
+                // 非活性時の処理
+                setErrors([]);
+                if (props.setAcceptForm != undefined) {
+                    props.setAcceptForm(true);
+                }
+                if (props.resetValue != undefined) {
+                    props.setFormValue(props.resetValue);
+                }
+            } else {
+                // 非活性解除時の処理
+                errorCheck(props.formValue);
+            }
+        }, [isEnable]);
+
+        const errorCheck = (value: string) => {
+            if (props.validators == undefined || !isEnable) return;
+            const errors = ValidateUtil.executeChecks(value, props.validators);
+            setErrors(errors);
+
+            if (props.setAcceptForm != undefined) {
+                props.setAcceptForm(errors.length === 0);
+            }
+        }
 
         const changeAction = (value: string) => {
             props.setFormValue(value);
-            const errors = ValidateUtil.executeChecks(value, props.validators);
-            setErrors(errors);
-            if(errors.length > 0) {
-                
+            if (props.extChangeProc != undefined) {
+                props.extChangeProc();
             }
+            errorCheck(value);
         }
+
+        // 生成時にエラーチェックを行う
+        let checkTrgArr = [props.formValue];
+        if (props.relationForms != undefined) checkTrgArr = checkTrgArr.concat(props.relationForms);
+        useEffect(() => {
+            errorCheck(props.formValue);
+        }, checkTrgArr);
+
+        const errorTypes = errors.map(error => error.type);
 
         const getFormJsx = () => {
             switch (props.inputType) {
                 case 'text': return (
-                    <_TextForm type={'text'} value={props.formValue} onChange={(e) => {
-                        changeAction(e.target.value);
-                    }} />
+                    <_TextForm
+                        type={'text'}
+                        value={props.formValue}
+                        width={props.formWidth}
+                        isEmptyError={errorTypes.includes('required')}
+                        isValueError={errorTypes.includes('value')}
+                        isRelationError={errorTypes.includes('relation')}
+                        onChange={(e) => {
+                            changeAction(e.target.value);
+                        }}
+                    />
+                );
+                case 'number': return (
+                    <_TextForm
+                        type={props.formValue !== '' ? 'number' : 'text'}
+                        value={props.formValue}
+                        width={props.formWidth}
+                        isEmptyError={errorTypes.includes('required')}
+                        isValueError={errorTypes.includes('value')}
+                        isRelationError={errorTypes.includes('relation')}
+                        onChange={(e) => {
+                            changeAction(e.target.value);
+                        }}
+                    />
                 );
                 case 'combobox': return (
-                    <_Combobox value={props.formValue} onChange={(e) => {
-                        changeAction(e.target.value);
-                    }} >
-                        {props.listItems.map((item, i) => (
+                    <_Combobox
+                        value={props.formValue}
+                        width={props.formWidth}
+                        onChange={(e) => {
+                            changeAction(e.target.value);
+                        }}
+                    >
+                        {props.listItems == undefined ? <></> : props.listItems.map((item, i) => (
                             <option key={i} value={item.value}>{item.message}</option>
                         ))}
                     </_Combobox>
                 );
-                case 'checkbox': return (<>
-                    <_CheckForm
-                        type={'checkbox'}
-                        checked={props.formValue === '1'}
-                        onChange={(e) => {
-                            changeAction(e.target.checked ? '1' : '');
-                        }} /><_CheckText>{props.checkMessage}</_CheckText>
-                </>);
+                case 'checkbox': return (
+                    <_CheckDiv>
+                        <_CheckForm
+                            type={'checkbox'}
+                            checked={props.formValue === '1'}
+                            onChange={(e) => {
+                                changeAction(e.target.checked ? '1' : '');
+                            }} /><_CheckText>{props.checkMessage}</_CheckText>
+                    </_CheckDiv>
+                );
+                case 'sentence': return (
+                    <_TextArea
+                        value={props.formValue} onChange={(e) => {
+                            changeAction(e.target.value);
+                        }}
+                        isEmptyError={errorTypes.includes('required')}
+                        isValueError={errorTypes.includes('value')}
+                        isRelationError={errorTypes.includes('relation')}
+                    />
+                )
             }
         }
 
@@ -56,7 +155,7 @@ namespace FormUtil {
             <_Error key={i}>{error.message}</_Error>
         ));
         return (
-            <_Record>
+            <_Record isEnable={isEnable}>
                 <_Title>{props.title}</_Title>
                 {getFormJsx()}
                 {errorJsxList}
@@ -93,15 +192,31 @@ const _Title = styled.div<{
 `;
 
 const _TextForm = styled.input<{
+    width?: number;
+    isEmptyError: boolean;
+    isValueError: boolean;
+    isRelationError: boolean;
 }>`
     display: inline-block;
     width: calc(100% - 22px);
+    ${props => props.width == undefined ? '' : css`
+        width: ${props.width}px;
+    `}
     height: 30px;
     font-size: 18px;
     margin: 0 0 0 10px;
     padding: 0 0 0 4px;
     box-sizing: border-box;
     color: #330f00;
+    ${props => !props.isEmptyError ? '' : css`
+        background-color: #ece367;
+    `}
+    ${props => !props.isValueError ? '' : css`
+        background-color: #fa6e6e;
+    `}
+    ${props => !props.isRelationError ? '' : css`
+        background-color: #75f591;
+    `}
 `;
 
 const _CheckDiv = styled.div<{
@@ -113,7 +228,7 @@ const _CheckDiv = styled.div<{
     margin: 0 0 0 10px;
     padding: 0 0 0 4px;
     box-sizing: border-box;
-    background-color: #ffd90028;
+    /* background-color: #ffd90028; */
 `;
 const _CheckText = styled.span<{
 }>`
@@ -128,6 +243,9 @@ const _CheckForm = styled.input<{
 `;
 
 const _TextArea = styled.textarea<{
+    isEmptyError: boolean;
+    isValueError: boolean;
+    isRelationError: boolean;
 }>`
     display: inline-block;
     width: calc(100% - 22px);
@@ -138,6 +256,15 @@ const _TextArea = styled.textarea<{
     box-sizing: border-box;
     color: #330f00;
     resize: none;
+    ${props => !props.isEmptyError ? '' : css`
+        background-color: #ece367;
+    `}
+    ${props => !props.isValueError ? '' : css`
+        background-color: #fa6e6e;
+    `}
+    ${props => !props.isRelationError ? '' : css`
+        background-color: #75f591;
+    `}
 `;
 
 const _TextLabel = styled.div<{
@@ -155,9 +282,13 @@ const _TextLabel = styled.div<{
 `;
 
 const _Combobox = styled.select<{
+    width?: number;
 }>`
     display: inline-block;
     width: calc(100% - 22px);
+    ${props => props.width == undefined ? '' : css`
+        width: ${props.width}px;
+    `}
     height: 30px;
     font-size: 18px;
     margin: 0 0 0 10px;

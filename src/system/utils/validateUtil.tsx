@@ -7,9 +7,9 @@ namespace ValidateUtil {
         message: string;
     }
 
-    export type Checker = (str: string) => ErrorProps | null;
-    
-    export const executeChecks = (str: string, checkerList: Checker[]) => {
+    export type Validator = (str: string) => ErrorProps | null;
+
+    export const executeChecks = (str: string, checkerList: Validator[]) => {
         const list: ErrorProps[] = [];
         for (let i = 0; i < checkerList.length; i++) {
             const check = checkerList[i];
@@ -20,22 +20,22 @@ namespace ValidateUtil {
     }
 
 
-    export const getHalfEisuChecker = (): Checker => {
+    export const getHalfEisuChecker = (): Validator => {
         const target = 'abcdefghijklmnopqrstuvwxyzABCDEFGHYJKLMNOPQRSTUVWXYZ0123456789_-';
         const error: ErrorProps = { type: 'value', message: '半角英数ではありません。' };
         return (str: string) => checkStr(str, target) ? null : error;
     }
 
-    export const getEmptyChecker = (): Checker => {
+    export const getEmptyChecker = (): Validator => {
         return (str: string) => str !== '' ? null : { type: 'required', message: '必須項目です。' };
     }
 
-    export const getLengthRangeChecker = (minLen: number, maxLen: number): Checker => {
+    export const getLengthRangeChecker = (minLen: number, maxLen: number): Validator => {
         return (str: string) => str.length >= minLen && str.length <= maxLen ? null :
             { type: 'value', message: `${minLen}～${maxLen}文字の範囲内で入力して下さい。` };
     }
 
-    export const getLengthLimitChecker = (maxLen: number): Checker => {
+    export const getLengthLimitChecker = (maxLen: number): Validator => {
         return (str: string) => str.length <= maxLen ? null : { type: 'value', message: `${maxLen}文字以内で入力して下さい。` };
     }
 

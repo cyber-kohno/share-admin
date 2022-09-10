@@ -6,22 +6,22 @@ import RegulationUtil from "../../utils/regulationUtil";
 import SystemUtil from "../../utils/systemUtil";
 import { GlobalContext } from "../entry/entry";
 import FieldDetailDialog from "./fieldDetailDialog";
-import FieldFrame from "./fieldFrame";
+import FieldListFrame from "./fieldListFrame";
 import RuleFrame from "./ruleFrame";
 
-const Regulation = (props: {
+const ContentsDefManager = (props: {
     masterConteSeq: number;
 }) => {
     const { store, setStore } = useContext(GlobalContext);
 
     const [isRule, setRule] = useState(true);
-    const [isDispDialog, setDispDialog] = useState(false);
+    const [dialog, setDialog] = useState<null | JSX.Element>(null);
     const [focusIndex, setFocusIndex] = useState(0);
-    const [ruleProps, setRuleProps] = useState<RegulationUtil.RuleProps>(RegulationUtil.getInitialRuleProps());
+    const [ruleProps, setRuleProps] = useState<RegulationUtil.RuleProps>(RegulationUtil.createInitialRuleProps());
 
-    const [fieldList, setFieldList] = useState<RegulationUtil.FieldProps[]>([RegulationUtil.createInitialField()]);
-    const [maxFiledNo, setMaxFieldNo] = useState(-1);
-    const [removeList, setRemoveList] = useState<number[]>([]);
+    const [fieldList, setFieldList] = useState<RegulationUtil.FieldProps[]>([]);
+    const [baseFiledNoList, setBaseFieldNoList] = useState<number[]>([]);
+    const [nextFieldNo, setNextFieldNo] = useState<number>(0);
 
     const isUpdate = props.masterConteSeq !== -1;
 
@@ -43,41 +43,35 @@ const Regulation = (props: {
 
                 DatabaseUtil.findMasterFieldList(seq).then((resFields) => {
                     const masterFieldList: RegulationUtil.FieldProps[] = [];
-                    let maxFieldNo = -1;
+                    const baseFieldNoList: number[] = [];
                     resFields.forEach((field) => {
                         const fieldProps = RegulationUtil.createInitialField();
+                        let maxFieldNo = -1;
                         Object.keys(field).forEach((key) => {
                             if (!['conteseq'].includes(key)) {
                                 const camelKey = SystemUtil.toCamelCase(key);
                                 const value = field[key] ?? '';
                                 console.log(`key: [${key}], value: [${value}]`);
                                 (fieldProps as any)[camelKey] = value;
-                                if (key === 'field_no' && maxFieldNo < Number(value)) {
-                                    maxFieldNo = Number(value);
+                                if (key === 'field_no') {
+                                    const fieldNo = Number(value);
+                                    baseFieldNoList.push(fieldNo);
+                                    if (maxFieldNo < fieldNo) maxFieldNo = fieldNo;
                                 }
                             }
                         });
                         masterFieldList.push(fieldProps);
+                        setNextFieldNo(maxFieldNo + 1);
                     });
-                    console.log(maxFieldNo);
-                    setMaxFieldNo(maxFieldNo);
+                    setBaseFieldNoList(baseFieldNoList);
                     setFieldList(masterFieldList);
                 });
-                // findMasterFieldList(seq).then((fieldList)=> {
-                //     fieldList.map(()=> {
-
-                //     });
-                // });
             });
         }
     }, []);
 
     const isInputOK = () => {
         return true;
-    }
-
-    const openDetailDialog = () => {
-        setDispDialog(true);
     }
 
     const register = () => {
@@ -105,16 +99,17 @@ const Regulation = (props: {
                 fieldList.forEach((field, i) => {
                     list.push(DatabaseUtil.createInsertQuery('fieldtbl', [
                         { col: 'conteseq', val: contentsSeq + 1 },
-                        { col: 'field_no', val: i },
+                        { col: 'field_no', val: field.fieldNo },
                         { col: 'sort_no', val: i },
                         { col: 'name', val: field.name },
                         { col: 'keyflg', val: field.keyflg },
-                        { col: 'required', val: field.validate },
-                        { col: 'cont_unique', val: field.unqflg },
+                        { col: 'validate', val: field.validate },
+                        { col: 'unqflg', val: field.unqflg },
                         { col: 'outline', val: field.outline },
                         { col: 'input_type', val: field.inputType },
                         { col: 'list', val: field.list },
-                        { col: 'width', val: field.width },
+                        { col: 'form_width', val: field.formWidth },
+                        { col: 'col_width', val: field.colWidth },
                     ]));
                 });
                 DatabaseUtil.sendQueryRequestToAPI('update', list.join(';')).then(() => {
@@ -134,12 +129,11 @@ const Regulation = (props: {
             ], `seq = ${props.masterConteSeq}`));
 
             fieldList.forEach((field, i) => {
-                let nextFieldNo = maxFiledNo + 1;
-                if (field.fieldNo === -1) {
+                if (!baseFiledNoList.includes(field.fieldNo)) {
                     // 更新時のコンテンツのインサート（新たに追加したフィールド）
                     list.push(DatabaseUtil.createInsertQuery('fieldtbl', [
                         { col: 'conteseq', val: props.masterConteSeq },
-                        { col: 'field_no', val: nextFieldNo },
+                        { col: 'field_no', val: field.fieldNo },
                         { col: 'sort_no', val: i },
                         { col: 'name', val: field.name },
                         { col: 'keyflg', val: field.keyflg },
@@ -148,9 +142,9 @@ const Regulation = (props: {
                         { col: 'outline', val: field.outline },
                         { col: 'input_type', val: field.inputType },
                         { col: 'list', val: field.list },
-                        { col: 'width', val: field.width },
+                        { col: 'form_width', val: field.formWidth },
+                        { col: 'col_width', val: field.colWidth },
                     ]));
-                    nextFieldNo++;
                 } else {
                     // 更新時のコンテンツのアップデート（既存のフィールド）
                     list.push(DatabaseUtil.createUpdateQuery('fieldtbl', [
@@ -162,10 +156,16 @@ const Regulation = (props: {
                         { col: 'outline', val: field.outline },
                         { col: 'input_type', val: field.inputType },
                         { col: 'list', val: field.list },
-                        { col: 'width', val: field.width },
+                        { col: 'form_width', val: field.formWidth },
+                        { col: 'col_width', val: field.colWidth },
                     ], `conteseq = ${props.masterConteSeq} and field_no = ${field.fieldNo}`));
 
                 }
+            });
+            const removeList: number[] = [];
+            const fieldNoList = fieldList.map(field => field.fieldNo);
+            baseFiledNoList.forEach(no => {
+                if (!fieldNoList.includes(no)) removeList.push(no);
             });
             if (removeList.length > 0) {
                 list.push(`DELETE FROM fieldtbl where conteseq = ${props.masterConteSeq} and field_no in(${removeList.join(',')})`);
@@ -202,14 +202,14 @@ const Regulation = (props: {
             >項目</_Switch>
             <_Frame>
                 {isRule ? <RuleFrame ruleProps={ruleProps} setRuleProps={setRuleProps} /> :
-                    <FieldFrame
+                    <FieldListFrame
                         fieldList={fieldList}
                         setFieldList={setFieldList}
-                        openDetailDialog={openDetailDialog}
+                        setDialog={setDialog}
                         focusIndex={focusIndex}
                         setFocusIndex={setFocusIndex}
-                        removeList={removeList}
-                        setRemoveList={setRemoveList}
+                        nextFieldNo={nextFieldNo}
+                        incrementNextFieldNo={() => { setNextFieldNo(nextFieldNo + 1) }}
                     />
                 }
             </_Frame>
@@ -217,20 +217,12 @@ const Regulation = (props: {
                 isEnable={isInputOK()}
                 onClick={register}
             >{!isUpdate ? '登録' : '更新'}</_Button>
-            {!isDispDialog ? <></> : <FieldDetailDialog
-                index={focusIndex}
-                fieldProps={fieldList[focusIndex]}
-                apply={(fieldCache: RegulationUtil.FieldProps) => {
-                    fieldList[focusIndex] = fieldCache;
-                    setFieldList(fieldList.slice())
-                }}
-                close={() => { setDispDialog(false) }}
-            />}
+            {dialog ?? <></>}
         </_Wrap>
     );
 }
 
-export default Regulation;
+export default ContentsDefManager;
 
 const findNextConteSeq = async () => {
     const response = await DatabaseUtil.sendQueryRequestToAPI('select', `SELECT seq FROM SQLITE_SEQUENCE where name = 'contetbl'`);
