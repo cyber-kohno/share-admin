@@ -49,7 +49,8 @@ namespace RegulationUtil {
         outline: string;
         inputType: FieldInputType;
         list: string;
-        default: string;
+        chkmsg: string;
+        initial: string;
         formWidth: number;
         colWidth: number;
     }
@@ -73,7 +74,8 @@ namespace RegulationUtil {
                 type: 'direct',
                 direct: ''
             } as ListProps),
-            default: '',
+            chkmsg: '',
+            initial: '',
             formWidth: 200,
             colWidth: 200
         }

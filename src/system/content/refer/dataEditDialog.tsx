@@ -1,11 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import Styles from "../../design/styles";
+import FormUtil from "../../utils/formUtil";
 import RegulationUtil from "../../utils/regulationUtil";
+import ValidateUtil from "../../utils/validateUtil";
 
 export type DataEditDialogProps = {
     fieldList: RegulationUtil.FieldProps[];
-    forms: string[];
+    initialValues: string[] | null;
     regist: (forms: string[]) => void;
     close: () => void;
 };
@@ -15,65 +17,157 @@ const DataEditDialog = (props: DataEditDialogProps) => {
 
     const [forms, setForms] = useState<string[]>([]);
 
+    const [acceptList, setAcceptList] = useState<boolean[]>([]);
+
     useEffect(() => {
-        setForms(props.forms);
+        if (props.initialValues == null) {
+            setForms(props.fieldList.map(field => field.initial));
+        } else {
+            setForms(props.initialValues);
+        }
+        const acceptList = new Array<boolean>(props.fieldList.length).fill(true);
+        setAcceptList(acceptList);
     }, []);
 
     const fieldJsxList = forms.map((form, i) => {
         const field = props.fieldList[i];
         const getFormJsx = () => {
+            const update = () => { setForms(forms.slice()) };
+            const setAcceptForm = (accept: boolean) => {
+                acceptList[i] = accept;
+                setAcceptList(acceptList.slice())
+            }
+            const validate = JSON.parse(field.validate) as RegulationUtil.ValidateProps;
+            const validators: ValidateUtil.Validator[] = [];
+            if (validate.required) {
+                validators.push(ValidateUtil.getEmptyChecker());
+            }
+            if (validate.eisu) {
+                validators.push(ValidateUtil.getHalfEisuChecker());
+            }
+            if (validate.useLenLimit) {
+                const lenMin = validate.lenMin as number;
+                const lenMax = validate.lenMax as number;
+                validators.push(ValidateUtil.getLengthRangeChecker(lenMin, lenMax));
+            }
+            if (validate.useNumLimit) {
+                const numMin = validate.numMin as number;
+                const numMax = validate.numMax as number;
+                validators.push(ValidateUtil.getValueRangeChecker(numMin, numMax));
+            }
             switch (field.inputType) {
                 case 'text': return (
-                    <_TextForm value={form} onChange={(e) => {
-                        forms[i] = e.target.value;
-                        setForms(forms.slice());
-                    }} />
+                    // <_TextForm value={form} onChange={(e) => {
+                    //     forms[i] = e.target.value;
+                    //     setForms(forms.slice());
+                    // }} />
+
+                    <FormUtil.InputItem
+                        title={field.name}
+                        formValue={forms[i]}
+                        setFormValue={(value: string) => { forms[i] = value; update(); }}
+                        formWidth={field.formWidth}
+                        inputType="text"
+                        validators={validators.length === 0 ? undefined : validators}
+                        setAcceptForm={setAcceptForm}
+                    />
                 );
                 case 'number': return (
-                    <_NumberForm type={'number'} value={form} onChange={(e) => {
-                        forms[i] = e.target.value;
-                        setForms(forms.slice());
-                    }} />
+                    // <_NumberForm type={'number'} value={form} onChange={(e) => {
+                    //     forms[i] = e.target.value;
+                    //     setForms(forms.slice());
+                    // }} />
+
+                    <FormUtil.InputItem
+                        title={field.name}
+                        formValue={forms[i]}
+                        setFormValue={(value: string) => { forms[i] = value; update(); }}
+                        formWidth={field.formWidth}
+                        inputType="number"
+                        validators={validators.length === 0 ? undefined : validators}
+                        setAcceptForm={setAcceptForm}
+                    />
                 );
                 case 'combobox': return (
-                    <_Combobox value={form} onChange={(e) => {
-                        forms[i] = e.target.value;
-                        setForms(forms.slice());
-                    }} >{field.list.split(',').map((value, j) => {
-                        return <option key={j} value={value}>{value}</option>;
-                    })}</_Combobox>
+                    // <_Combobox value={form} onChange={(e) => {
+                    //     forms[i] = e.target.value;
+                    //     setForms(forms.slice());
+                    // }} >{field.list.split(',').map((value, j) => {
+                    //     return <option key={j} value={value}>{value}</option>;
+                    // })}</_Combobox>
+
+                    <FormUtil.InputItem
+                        title={field.name}
+                        formValue={forms[i]}
+                        setFormValue={(value: string) => { forms[i] = value; update(); }}
+                        formWidth={field.formWidth}
+                        inputType="combobox"
+                        listItems={
+                            (JSON.parse(field.list) as RegulationUtil.ListProps).direct.split(',').map((value) => {
+                                return { value, message: value };
+                            })
+                        }
+                    />
                 );
                 case 'sentence': return (
-                    <_TextArea value={form} onChange={(e) => {
-                        forms[i] = e.target.value;
-                        setForms(forms.slice());
-                    }} />
+                    // <_TextArea value={form} onChange={(e) => {
+                    //     forms[i] = e.target.value;
+                    //     setForms(forms.slice());
+                    // }} />
+
+                    <FormUtil.InputItem
+                        title={field.name}
+                        formValue={forms[i]}
+                        setFormValue={(value: string) => { forms[i] = value; update(); }}
+                        formWidth={field.formWidth}
+                        inputType="sentence"
+                        validators={validators.length === 0 ? undefined : validators}
+                        setAcceptForm={setAcceptForm}
+                    />
+                );
+                case 'check': return (
+
+                    <FormUtil.InputItem
+                        title={field.name}
+                        formValue={forms[i]}
+                        setFormValue={(value: string) => { forms[i] = value; update(); }}
+                        inputType="checkbox"
+                        checkMessage={field.chkmsg}
+                    />
                 );
                 case 'image': return (<>
-                    <_TextForm value={form} onChange={(e) => {
-                        forms[i] = e.target.value;
-                        setForms(forms.slice());
-                    }} />
-                    <_Image src={form} />
+                    <FormUtil.InputItem
+                        title={field.name}
+                        formValue={forms[i]}
+                        setFormValue={(value: string) => { forms[i] = value; update(); }}
+                        inputType="text"
+                        validators={validators.length === 0 ? undefined : validators}
+                        setAcceptForm={setAcceptForm}
+                        extend={<_Image src={form} />}
+                    />
                 </>);
             }
         }
         const inputType = RegulationUtil.FieldInputTypeItems.find(item => item.key === field.inputType);
-        const imputTypeName = inputType == undefined ? '' : inputType.message;
+        // const imputTypeName = inputType == undefined ? '' : inputType.message;
         return (
-            <_Record key={i}>
-                <_Text><_Name>{field.sortNo + 1}.{field.name}</_Name> [{imputTypeName}]</_Text>
+            <div key={i}>
+                {/* <_Text><_Name>{field.sortNo + 1}.{field.name}</_Name> [{imputTypeName}]</_Text> */}
                 {getFormJsx()}
-            </_Record>
+            </div>
         );
     }, []);
+
+    const isInputAllOK = () => {
+        return acceptList.find(accept => !accept) == undefined;
+    }
     return (
         <_Wrap>
             <_Frame>
                 <_Scroll>
                     {fieldJsxList}
                 </_Scroll>
-                <_Button isEnable={true} onClick={() => {
+                <_Button isEnable={isInputAllOK()} onClick={() => {
                     props.regist(forms);
                     props.close();
                 }}>更新</_Button>
@@ -122,15 +216,28 @@ const _Scroll = styled.div`
     /* border: 1px solid #ffffffc3; */
     text-align: center;
     overflow: auto;
+    &::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background: #1959A8;
+    }
+    &::-webkit-scrollbar-track {
+        border-radius: 5px;
+        box-shadow: 0 0 4px #aaa inset;
+    }
 `;
 
 const _Record = styled.div`
     display: inline-block;
     width: 100%;
-    height: 140px;
-    background-color: #9b8f8f28;
+    /* min-height: 140px; */
+    background-color: #8f9b93;
     text-align: left;
     margin: 5px 0 0 0;
+    padding: 0 0 5px 0;
 `;
 
 const _Text = styled.div<{
@@ -166,6 +273,7 @@ const _Image = styled.img<{
     display: inline-block;
     width: 200px;
     height: 200px;
+    margin: 5px 0 0 10px;
 `;
 
 const _NumberForm = styled.input<{

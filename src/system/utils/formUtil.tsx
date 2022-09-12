@@ -39,6 +39,7 @@ namespace FormUtil {
         checkMessage?: string;
         extChangeProc?: () => void;
         resetValue?: string;
+        extend?: JSX.Element;
     }) => {
 
         const isEnable = props.isEnable ?? true;
@@ -89,7 +90,7 @@ namespace FormUtil {
 
         const getFormJsx = () => {
             switch (props.inputType) {
-                case 'text': return (
+                case 'text': return (<>
                     <_TextForm
                         type={'text'}
                         value={props.formValue}
@@ -101,7 +102,8 @@ namespace FormUtil {
                             changeAction(e.target.value);
                         }}
                     />
-                );
+                    {props.extend}
+                </>);
                 case 'number': return (
                     <_TextForm
                         type={props.formValue !== '' ? 'number' : 'text'}
@@ -176,6 +178,8 @@ const _Record = styled.div<{
     background-color: #9b8f8f28;
     text-align: left;
     margin: 5px 0 0 0;
+    padding: 0 0 5px 0;
+    box-sizing: border-box;
 `;
 
 const _Title = styled.div<{

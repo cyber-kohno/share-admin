@@ -35,6 +35,11 @@ namespace ValidateUtil {
             { type: 'value', message: `${minLen}～${maxLen}文字の範囲内で入力して下さい。` };
     }
 
+    export const getValueRangeChecker = (minNum: number, maxNum: number): Validator => {
+        return (str: string) => Number(str) >= minNum && Number(str) <= maxNum ? null :
+            { type: 'value', message: `${minNum}～${maxNum}の値の範囲内で入力して下さい。` };
+    }
+
     export const getLengthLimitChecker = (maxLen: number): Validator => {
         return (str: string) => str.length <= maxLen ? null : { type: 'value', message: `${maxLen}文字以内で入力して下さい。` };
     }

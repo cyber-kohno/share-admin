@@ -38,6 +38,7 @@ const FieldDetailDialog = (props: {
     const [acceptFormLenMax, setAcceptFormLenMax] = useState(true);
     const [acceptFormNumMin, setAcceptFormNumMin] = useState(true);
     const [acceptFormNumMax, setAcceptFormNumMax] = useState(true);
+    const [acceptFormChkmsg, setAcceptFormChkmsg] = useState(true);
 
     const acceptFormList = [
         acceptFormName,
@@ -45,14 +46,17 @@ const FieldDetailDialog = (props: {
         acceptFormLenMin,
         acceptFormLenMax,
         acceptFormNumMin,
-        acceptFormNumMax
+        acceptFormNumMax,
+        acceptFormChkmsg
     ];
 
     useEffect(() => {
-        
-        const listProps = JSON.parse(props.fieldProps.list) as RegulationUtil.ListProps;
-        setDirect(listProps.direct);
 
+
+        if (fieldCache.inputType === 'combobox') {
+            const listProps = JSON.parse(props.fieldProps.list) as RegulationUtil.ListProps;
+            setDirect(listProps.direct);
+        }
         const validateProps = JSON.parse(props.fieldProps.validate) as RegulationUtil.ValidateProps;
         setRequired(validateProps.required);
         setEisu(validateProps.eisu);
@@ -78,11 +82,15 @@ const FieldDetailDialog = (props: {
     }, acceptFormList);
 
     const applyAction = () => {
-        const list: RegulationUtil.ListProps = {
-            type: 'direct',
-            direct: direct
+        if (fieldCache.inputType === 'combobox') {
+            const list: RegulationUtil.ListProps = {
+                type: 'direct',
+                direct: direct
+            }
+            fieldCache.list = JSON.stringify(list);
+        } else {
+            fieldCache.list = '';
         }
-        fieldCache.list = JSON.stringify(list);
 
         const validate: RegulationUtil.ValidateProps = {
             required: isRequired,
@@ -125,30 +133,6 @@ const FieldDetailDialog = (props: {
                         setAcceptForm={setAcceptFormName}
                     />
                     <FormUtil.InputItem
-                        title="キー"
-                        formValue={fieldCache.keyflg}
-                        setFormValue={(value: string) => { fieldCache.keyflg = value; update(); }}
-                        inputType="checkbox"
-                        checkMessage="データを特定するためのキー項目とする"
-                    />
-                    <FormUtil.InputItem
-                        title="重複許可"
-                        formValue={fieldCache.unqflg}
-                        setFormValue={(value: string) => { fieldCache.unqflg = value; update(); }}
-                        inputType="checkbox"
-                        checkMessage="重複を認めない"
-                    />
-                    <FormUtil.InputItem
-                        title="項目の概要"
-                        formValue={fieldCache.outline}
-                        setFormValue={(value: string) => { fieldCache.outline = value; update(); }}
-                        inputType="sentence"
-                        validators={[
-                            ValidateUtil.getLengthLimitChecker(100)
-                        ]}
-                        setAcceptForm={setAcceptFormOutline}
-                    />
-                    <FormUtil.InputItem
                         title="入力方式"
                         formValue={fieldCache.inputType}
                         setFormValue={(value: string) => { (fieldCache.inputType as string) = value; update(); }}
@@ -166,6 +150,33 @@ const FieldDetailDialog = (props: {
                         }}
                     />
                     <FormUtil.InputItem
+                        title="キー"
+                        formValue={fieldCache.keyflg}
+                        isEnable={['text', 'number', 'combobox'].includes(fieldCache.inputType)}
+                        setFormValue={(value: string) => { fieldCache.keyflg = value; update(); }}
+                        inputType="checkbox"
+                        checkMessage="データを特定するためのキー項目とする"
+                        resetValue={''}
+                    />
+                    <FormUtil.InputItem
+                        title="重複許可"
+                        formValue={fieldCache.unqflg}
+                        isEnable={['text', 'number', 'combobox'].includes(fieldCache.inputType)}
+                        setFormValue={(value: string) => { fieldCache.unqflg = value; update(); }}
+                        inputType="checkbox"
+                        checkMessage="重複を認めない"
+                    />
+                    <FormUtil.InputItem
+                        title="項目の概要"
+                        formValue={fieldCache.outline}
+                        setFormValue={(value: string) => { fieldCache.outline = value; update(); }}
+                        inputType="sentence"
+                        validators={[
+                            ValidateUtil.getLengthLimitChecker(100)
+                        ]}
+                        setAcceptForm={setAcceptFormOutline}
+                    />
+                    <FormUtil.InputItem
                         title="選択肢"
                         isEnable={['combobox'].includes(fieldCache.inputType)}
                         formValue={direct}
@@ -180,8 +191,22 @@ const FieldDetailDialog = (props: {
                         }} />
                     </_Record> */}
                     <FormUtil.InputItem
+                        title="チェックボックス説明"
+                        formValue={fieldCache.chkmsg}
+                        isEnable={(['check'] as RegulationUtil.FieldInputType[]).includes(fieldCache.inputType)}
+                        setFormValue={(value: string) => { fieldCache.chkmsg = value; update(); }}
+                        formWidth={400}
+                        inputType="text"
+                        validators={[
+                            ValidateUtil.getEmptyChecker(),
+                            ValidateUtil.getLengthLimitChecker(20)
+                        ]}
+                        setAcceptForm={setAcceptFormChkmsg}
+                    />
+                    <FormUtil.InputItem
                         title="必須"
                         formValue={isRequired ? '1' : ''}
+                        isEnable={['text', 'number', 'combobox'].includes(fieldCache.inputType)}
                         setFormValue={(value: string) => {
                             setRequired(value === '1');
                         }}
@@ -279,9 +304,9 @@ const FieldDetailDialog = (props: {
                     />
                     <FormUtil.InputItem
                         title="初期値"
-                        formValue={fieldCache.default}
+                        formValue={fieldCache.initial}
                         formWidth={100}
-                        setFormValue={(value: string) => { fieldCache.default = value; update(); }}
+                        setFormValue={(value: string) => { fieldCache.initial = value; update(); }}
                         inputType="text"
                     />
                     <FormUtil.InputItem
@@ -344,6 +369,18 @@ const _Scroll = styled.div`
     /* border: 1px solid #ffffffc3; */
     text-align: center;
     overflow: auto;
+    &::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background: #1959A8;
+    }
+    &::-webkit-scrollbar-track {
+        border-radius: 5px;
+        box-shadow: 0 0 4px #aaa inset;
+    }
 `;
 
 

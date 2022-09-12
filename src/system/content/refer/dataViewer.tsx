@@ -72,10 +72,11 @@ const DataViewer = (props: {
     const openDetailDialog = (isCreate: boolean) => {
         const curRecord = dataRecordList[focusIndex];
         const curResponse = responseList[focusIndex];
-        const initialForms = isCreate ? new Array<string>(fieldList.length).fill('') : curRecord.slice();
+        // const initialValues = isCreate ? new Array<string>(fieldList.length).fill('') : curRecord.slice();
+        const initialValues = isCreate ? null : curRecord.slice();
         setDataEditDialogProps({
             fieldList,
-            forms: initialForms,
+            initialValues,
             regist: (forms: string[]) => {
                 if (isCreate) {
                     const rowQuery = `(select max(row) from rcmsttbl WHERE conteseq = '${props.conte.seq}')`;
@@ -154,13 +155,13 @@ const DataViewer = (props: {
                     store.transition.backFrame();
                     setStore({ ...store });
                 }}>戻る</_Button>
-                {/* <_MessageFrame><_Message>{props.conte.outline}</_Message></_MessageFrame> */}
-                <_MessageFrame><_Message>{url}</_Message></_MessageFrame>
-                <_OperationRecord>
+                <_MessageFrame><_Message>{props.conte.outline}</_Message></_MessageFrame>
+                {/* <_MessageFrame><_Message>{url}</_Message></_MessageFrame> */}
+                {/* <_OperationRecord>
                     <_Switch isFocus={false}>テーブル</_Switch>
-                    {/* <_Switch isFocus={false}>統計</_Switch>
-                    <_Switch isFocus={false}>ツリー</_Switch> */}
-                </_OperationRecord>
+                    <_Switch isFocus={false}>統計</_Switch>
+                    <_Switch isFocus={false}>ツリー</_Switch>
+                </_OperationRecord> */}
             </_HideArea>
             <_OperationRecord>
                 <_Button isEnable={true} onClick={createRecord}>レコード追加</_Button>
@@ -184,7 +185,7 @@ const DataViewer = (props: {
             </_OperationRecord>
             {dataEditDialogProps == null ? <></> : <DataEditDialog
                 fieldList={dataEditDialogProps.fieldList}
-                forms={dataEditDialogProps.forms}
+                initialValues={dataEditDialogProps.initialValues}
                 regist={dataEditDialogProps.regist}
                 close={dataEditDialogProps.close}
             />}
@@ -260,10 +261,22 @@ const _Header = styled.div`
 const _Body = styled.div`
     display: inline-block;
     width: 100%;
-    height: calc(100% - 60px);
+    height: calc(100% - 30px);
     /* background-color: #c9d1e4; */
     text-align: left;
     overflow: auto;
+    &::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background: #1959A8;
+    }
+    &::-webkit-scrollbar-track {
+        border-radius: 5px;
+        box-shadow: 0 0 4px #aaa inset;
+    }
 `;
 
 const _Record = styled.div<{

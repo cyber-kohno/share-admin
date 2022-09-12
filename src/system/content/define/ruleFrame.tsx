@@ -1,6 +1,7 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import styled, { css } from "styled-components";
 import Styles from "../../design/styles";
+import DatabaseUtil from "../../utils/databaseUtil";
 import FormUtil from "../../utils/formUtil";
 import RegulationUtil from "../../utils/regulationUtil";
 import ValidateUtil from "../../utils/validateUtil";
@@ -18,6 +19,18 @@ const RuleFrame = (props: {
     const [acceptFormId, setAcceptFormId] = useState(true);
 
     const [joinUserList, setJoinUserList] = useState<string[]>([]);
+
+    const [userSetList, setUserSetList] = useState<ListManager.TargetSet[]>([]);
+
+    useEffect(() => {
+        findUserSetList().then(list => {
+            setUserSetList(list);
+        });
+    }, []);
+
+    useEffect(() => {
+        rule.referUsers = joinUserList.join(',');
+    }, [joinUserList]);
 
     return (
         <_Wrap>
@@ -71,6 +84,7 @@ const RuleFrame = (props: {
                 <ListManager.Component
                     userList={joinUserList}
                     setUserList={setJoinUserList}
+                    targetList={userSetList}
                 />
             </_Record>
             <_Record isEnable={props.ruleProps.referAuth === 'group-limit'}>
@@ -156,6 +170,12 @@ const RuleFrame = (props: {
 }
 
 export default RuleFrame;
+
+const findUserSetList = async () => {
+    const response = await DatabaseUtil.sendQueryRequestToAPI('select', `SELECT seq, id FROM user_tbl`);
+    const results = await response.json();
+    return (results as ListManager.TargetSet[]);
+};
 
 
 const _Wrap = styled.div`

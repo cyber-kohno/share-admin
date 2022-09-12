@@ -5,7 +5,6 @@ import DatabaseUtil from "../../utils/databaseUtil";
 import RegulationUtil from "../../utils/regulationUtil";
 import SystemUtil from "../../utils/systemUtil";
 import { GlobalContext } from "../entry/entry";
-import FieldDetailDialog from "./fieldDetailDialog";
 import FieldListFrame from "./fieldListFrame";
 import RuleFrame from "./ruleFrame";
 
@@ -87,6 +86,7 @@ const ContentsDefManager = (props: {
                     { col: 'name', val: ruleProps.name },
                     { col: 'outline', val: ruleProps.outline },
                     { col: 'refer_auth', val: ruleProps.referAuth },
+                    { col: 'refer_users', val: ruleProps.referUsers},
                     { col: 'regist_auth', val: ruleProps.registAuth },
                     { col: 'search_limit', val: ruleProps.searchLimit },
                     { col: 'regist_limit', val: ruleProps.registLimit },
@@ -108,6 +108,8 @@ const ContentsDefManager = (props: {
                         { col: 'outline', val: field.outline },
                         { col: 'input_type', val: field.inputType },
                         { col: 'list', val: field.list },
+                        { col: 'chkmsg', val: field.chkmsg },
+                        { col: 'initial', val: field.initial },
                         { col: 'form_width', val: field.formWidth },
                         { col: 'col_width', val: field.colWidth },
                     ]));
@@ -124,6 +126,7 @@ const ContentsDefManager = (props: {
                 { col: 'name', val: ruleProps.name },
                 { col: 'outline', val: ruleProps.outline },
                 { col: 'refer_auth', val: ruleProps.referAuth },
+                { col: 'refer_users', val: ruleProps.referUsers},
                 { col: 'regist_auth', val: ruleProps.registAuth },
                 { col: 'search_limit', val: ruleProps.searchLimit },
             ], `seq = ${props.masterConteSeq}`));
@@ -142,6 +145,8 @@ const ContentsDefManager = (props: {
                         { col: 'outline', val: field.outline },
                         { col: 'input_type', val: field.inputType },
                         { col: 'list', val: field.list },
+                        { col: 'chkmsg', val: field.chkmsg },
+                        { col: 'initial', val: field.initial },
                         { col: 'form_width', val: field.formWidth },
                         { col: 'col_width', val: field.colWidth },
                     ]));
@@ -156,6 +161,8 @@ const ContentsDefManager = (props: {
                         { col: 'outline', val: field.outline },
                         { col: 'input_type', val: field.inputType },
                         { col: 'list', val: field.list },
+                        { col: 'chkmsg', val: field.chkmsg },
+                        { col: 'initial', val: field.initial },
                         { col: 'form_width', val: field.formWidth },
                         { col: 'col_width', val: field.colWidth },
                     ], `conteseq = ${props.masterConteSeq} and field_no = ${field.fieldNo}`));
@@ -187,7 +194,7 @@ const ContentsDefManager = (props: {
                     setStore({ ...store });
                 }}
             >戻る</_Button>
-            <_MessageFrame><_Message>{'aa'}</_Message></_MessageFrame>
+            <_MessageFrame><_Message>{'コンテンツを定義します。'}</_Message></_MessageFrame>
             <_Switch
                 isFocus={isRule}
                 onClick={() => {

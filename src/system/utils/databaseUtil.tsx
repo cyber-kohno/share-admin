@@ -2,8 +2,8 @@ import { Base64 } from "js-base64";
 
 export namespace DatabaseUtil {
 
-    // export const API_DOMAIN = 'https://crud-server001.glitch.me/';
-    export const API_DOMAIN = 'http://localhost:4112';
+    export const API_DOMAIN = 'https://crud-server001.glitch.me/';
+    // export const API_DOMAIN = 'http://localhost:4112';
     
     export const createQueryRequestInit = (sql: string): RequestInit => {
         return {

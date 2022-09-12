@@ -1,29 +1,60 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import styled, { css } from "styled-components";
 import Styles from "../../design/styles";
 
 namespace ListManager {
 
+    export type TargetSet = {
+        seq: number;
+        id: string;
+    };
     export const Component = (props: {
         userList: string[];
         setUserList: (userList: string[]) => void;
+        targetList: TargetSet[];
     }) => {
         const [userId, setUserId] = useState('');
+
+        const getSeq = (userId: string) => {
+            const target = props.targetList.find(target => target.id === userId);
+            return target == undefined ? null : target.seq;
+        }
+        const getUserId = (seq: number) => {
+            const target = props.targetList.find(target => target.seq === seq);
+            return target == undefined ? null : target.id;
+        }
+        const userIdList = useMemo(() => {
+            return props.userList.map(user => {
+                const userId = getUserId(Number(user));
+                // alert(userId);
+                return userId ?? '?';
+            });
+        }, [props.userList]);
 
         return (<>
             <_TextForm type={'text'} value={userId} onChange={(e) => {
                 setUserId(e.target.value);
             }} />
-            <_Button isEnable={true}
+            <_Button
+                isEnable={true}
                 onClick={() => {
-                    props.userList.push(userId);
-                    props.setUserList(props.userList.slice());
+                    const result = props.targetList.find(target => target.id === userId);
+                    if (result != undefined) {
+                        const seq = getSeq(userId);
+                        if (seq != null && !props.userList.includes(seq.toString())) {
+                            props.userList.push(seq.toString());
+                        }
+                        props.setUserList(props.userList.slice());
+                    }
                     setUserId('');
                 }}
             >追加</_Button>
             <_ListFrame>
-                {props.userList.map((item, i) => (
-                    <_ListItem key={i}>{item}<_ItemDelete>×</_ItemDelete></_ListItem>
+                {userIdList.map((item, i) => (
+                    <_ListItem key={i}>{item}<_ItemDelete onClick={()=>{
+                        props.userList.splice(i, 1);
+                        props.setUserList(props.userList.slice());
+                    }}>×</_ItemDelete></_ListItem>
                 ))}
             </_ListFrame>
         </>);
@@ -127,5 +158,7 @@ const _ItemDelete = styled.div<{
     line-height: 16px;
     border-radius: 8px;
     vertical-align: top;
-    
+    &:hover {
+        background-color: #ffffff68;
+    }
 `;
