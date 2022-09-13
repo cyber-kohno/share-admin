@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import styled, { css } from "styled-components";
-import Styles from "../../design/styles";
+import Styles from "../design/styles";
 
 namespace ListManager {
 

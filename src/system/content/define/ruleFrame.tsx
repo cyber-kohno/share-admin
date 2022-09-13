@@ -6,7 +6,7 @@ import FormUtil from "../../utils/formUtil";
 import RegulationUtil from "../../utils/regulationUtil";
 import ValidateUtil from "../../utils/validateUtil";
 import { GlobalContext } from "../entry/entry";
-import ListManager from "./listManager";
+import ListManager from "../../utils/listManager";
 
 const RuleFrame = (props: {
     ruleProps: RegulationUtil.RuleProps;
