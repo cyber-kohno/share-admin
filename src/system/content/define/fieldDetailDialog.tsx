@@ -204,6 +204,16 @@ const FieldDetailDialog = (props: {
                         setAcceptForm={setAcceptFormChkmsg}
                     />
                     <FormUtil.InputItem
+                        title="空白表示"
+                        formValue={isRequired ? '1' : ''}
+                        isEnable={['combobox'].includes(fieldCache.inputType)}
+                        setFormValue={(value: string) => {
+                            setRequired(value === '1');
+                        }}
+                        inputType="checkbox"
+                        checkMessage="選択肢の先頭に空白を入れる"
+                    />
+                    <FormUtil.InputItem
                         title="必須"
                         formValue={isRequired ? '1' : ''}
                         isEnable={['text', 'number', 'combobox'].includes(fieldCache.inputType)}

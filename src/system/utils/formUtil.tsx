@@ -30,6 +30,7 @@ namespace FormUtil {
         formValue: string;
         formWidth?: number;
         isEnable?: boolean;
+        isVisible?: boolean;
         setFormValue: (formValue: string) => void;
         inputType: 'text' | 'number' | 'combobox' | 'checkbox' | 'sentence';
         validators?: ValidateUtil.Validator[];
@@ -43,6 +44,7 @@ namespace FormUtil {
     }) => {
 
         const isEnable = props.isEnable ?? true;
+        const isVisible = props.isVisible ?? true;
         const [errors, setErrors] = useState<ValidateUtil.ErrorProps[]>([]);
 
         useEffect(() => {
@@ -212,14 +214,14 @@ const _TextForm = styled.input<{
     padding: 0 0 0 4px;
     box-sizing: border-box;
     color: #330f00;
-    ${props => !props.isEmptyError ? '' : css`
-        background-color: #ece367;
+    ${props => !props.isRelationError ? '' : css`
+        background-color: #75f591;
     `}
     ${props => !props.isValueError ? '' : css`
         background-color: #fa6e6e;
     `}
-    ${props => !props.isRelationError ? '' : css`
-        background-color: #75f591;
+    ${props => !props.isEmptyError ? '' : css`
+        background-color: #ece367;
     `}
 `;
 
@@ -260,14 +262,14 @@ const _TextArea = styled.textarea<{
     box-sizing: border-box;
     color: #330f00;
     resize: none;
-    ${props => !props.isEmptyError ? '' : css`
-        background-color: #ece367;
+    ${props => !props.isRelationError ? '' : css`
+        background-color: #75f591;
     `}
     ${props => !props.isValueError ? '' : css`
         background-color: #fa6e6e;
     `}
-    ${props => !props.isRelationError ? '' : css`
-        background-color: #75f591;
+    ${props => !props.isEmptyError ? '' : css`
+        background-color: #ece367;
     `}
 `;
 
