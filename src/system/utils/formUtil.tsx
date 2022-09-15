@@ -43,8 +43,8 @@ namespace FormUtil {
         extend?: JSX.Element;
     }) => {
 
-        const isEnable = props.isEnable ?? true;
         const isVisible = props.isVisible ?? true;
+        const isEnable = isVisible && (props.isEnable ?? true);
         const [errors, setErrors] = useState<ValidateUtil.ErrorProps[]>([]);
 
         useEffect(() => {
@@ -158,7 +158,7 @@ namespace FormUtil {
         const errorJsxList = errors.map((error, i) => (
             <_Error key={i}>{error.message}</_Error>
         ));
-        return (
+        return (!isVisible ? <></> :
             <_Record isEnable={isEnable}>
                 <_Title>{props.title}</_Title>
                 {getFormJsx()}

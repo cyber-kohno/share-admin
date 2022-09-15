@@ -111,6 +111,10 @@ const FieldDetailDialog = (props: {
         props.close();
     };
 
+    const containsInputType = (list: RegulationUtil.FieldInputType[]) => {
+        return list.includes(fieldCache.inputType)
+    } 
+
     return (
         <_Wrap>
             <_Frame>
@@ -133,6 +137,16 @@ const FieldDetailDialog = (props: {
                         setAcceptForm={setAcceptFormName}
                     />
                     <FormUtil.InputItem
+                        title="項目の概要"
+                        formValue={fieldCache.outline}
+                        setFormValue={(value: string) => { fieldCache.outline = value; update(); }}
+                        inputType="sentence"
+                        validators={[
+                            ValidateUtil.getLengthLimitChecker(100)
+                        ]}
+                        setAcceptForm={setAcceptFormOutline}
+                    />
+                    <FormUtil.InputItem
                         title="入力方式"
                         formValue={fieldCache.inputType}
                         setFormValue={(value: string) => { (fieldCache.inputType as string) = value; update(); }}
@@ -152,7 +166,7 @@ const FieldDetailDialog = (props: {
                     <FormUtil.InputItem
                         title="キー"
                         formValue={fieldCache.keyflg}
-                        isEnable={['text', 'number', 'combobox'].includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['text', 'number', 'combobox'])}
                         setFormValue={(value: string) => { fieldCache.keyflg = value; update(); }}
                         inputType="checkbox"
                         checkMessage="データを特定するためのキー項目とする"
@@ -161,24 +175,14 @@ const FieldDetailDialog = (props: {
                     <FormUtil.InputItem
                         title="重複許可"
                         formValue={fieldCache.unqflg}
-                        isEnable={['text', 'number', 'combobox'].includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['text', 'number', 'combobox'])}
                         setFormValue={(value: string) => { fieldCache.unqflg = value; update(); }}
                         inputType="checkbox"
                         checkMessage="重複を認めない"
                     />
                     <FormUtil.InputItem
-                        title="項目の概要"
-                        formValue={fieldCache.outline}
-                        setFormValue={(value: string) => { fieldCache.outline = value; update(); }}
-                        inputType="sentence"
-                        validators={[
-                            ValidateUtil.getLengthLimitChecker(100)
-                        ]}
-                        setAcceptForm={setAcceptFormOutline}
-                    />
-                    <FormUtil.InputItem
                         title="選択肢"
-                        isEnable={['combobox'].includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['combobox'])}
                         formValue={direct}
                         setFormValue={(value: string) => { setDirect(value) }}
                         inputType="sentence"
@@ -193,7 +197,7 @@ const FieldDetailDialog = (props: {
                     <FormUtil.InputItem
                         title="チェックボックス説明"
                         formValue={fieldCache.chkmsg}
-                        isEnable={(['check'] as RegulationUtil.FieldInputType[]).includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['check'])}
                         setFormValue={(value: string) => { fieldCache.chkmsg = value; update(); }}
                         formWidth={400}
                         inputType="text"
@@ -206,7 +210,7 @@ const FieldDetailDialog = (props: {
                     <FormUtil.InputItem
                         title="空白表示"
                         formValue={isRequired ? '1' : ''}
-                        isEnable={['combobox'].includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['combobox'])}
                         setFormValue={(value: string) => {
                             setRequired(value === '1');
                         }}
@@ -216,7 +220,7 @@ const FieldDetailDialog = (props: {
                     <FormUtil.InputItem
                         title="必須"
                         formValue={isRequired ? '1' : ''}
-                        isEnable={['text', 'number', 'combobox'].includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['text', 'number', 'combobox'])}
                         setFormValue={(value: string) => {
                             setRequired(value === '1');
                         }}
@@ -226,7 +230,7 @@ const FieldDetailDialog = (props: {
                     <FormUtil.InputItem
                         title="半角英数"
                         formValue={isEisu ? '1' : ''}
-                        isEnable={(['text', 'sentence'] as RegulationUtil.FieldInputType[]).includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['text'])}
                         setFormValue={(value: string) => {
                             setEisu(value === '1');
                         }}
@@ -235,9 +239,9 @@ const FieldDetailDialog = (props: {
                         checkMessage="半角英数字のみ許容する"
                     />
                     <FormUtil.InputItem
-                        title="文字数範囲制限"
+                        title="文字数制限"
                         formValue={useLenLimit ? '1' : ''}
-                        isEnable={(['text', 'sentence'] as RegulationUtil.FieldInputType[]).includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['text', 'sentence'])}
                         setFormValue={(value: string) => {
                             setUseLenLimit(value === '1');
                         }}
@@ -247,8 +251,9 @@ const FieldDetailDialog = (props: {
                     />
                     <FormUtil.InputItem
                         title="最低文字数"
-                        isEnable={useLenLimit}
                         formValue={useLenLimit ? String(lenMin) : ''}
+                        isVisible={containsInputType(['text', 'sentence'])}
+                        isEnable={useLenLimit}
                         formWidth={150}
                         setFormValue={(value: string) => { setLenMin(Number(value)) }}
                         inputType="number"
@@ -261,8 +266,9 @@ const FieldDetailDialog = (props: {
                     />
                     <FormUtil.InputItem
                         title="最大文字数"
-                        isEnable={useLenLimit}
                         formValue={useLenLimit ? String(lenMax) : ''}
+                        isVisible={containsInputType(['text', 'sentence'])}
+                        isEnable={useLenLimit}
                         formWidth={150}
                         setFormValue={(value: string) => { setLenMax(Number(value)) }}
                         inputType="number"
@@ -276,7 +282,7 @@ const FieldDetailDialog = (props: {
                     <FormUtil.InputItem
                         title="数値範囲制限"
                         formValue={useNumLimit ? '1' : ''}
-                        isEnable={['number'].includes(fieldCache.inputType)}
+                        isVisible={containsInputType(['number'])}
                         setFormValue={(value: string) => {
                             setUseNumLimit(value === '1');
                         }}
@@ -286,8 +292,9 @@ const FieldDetailDialog = (props: {
                     />
                     <FormUtil.InputItem
                         title="最小値"
-                        isEnable={useNumLimit}
                         formValue={useNumLimit ? String(numMin) : ''}
+                        isVisible={containsInputType(['number'])}
+                        isEnable={useNumLimit}
                         formWidth={150}
                         setFormValue={(value: string) => { setNumMin(Number(value)) }}
                         inputType="number"
@@ -300,8 +307,9 @@ const FieldDetailDialog = (props: {
                     />
                     <FormUtil.InputItem
                         title="最大値"
-                        isEnable={useNumLimit}
                         formValue={useNumLimit ? String(numMax) : ''}
+                        isVisible={containsInputType(['number'])}
+                        isEnable={useNumLimit}
                         formWidth={150}
                         setFormValue={(value: string) => { setNumMax(Number(value)) }}
                         inputType="number"
